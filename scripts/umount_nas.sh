@@ -71,9 +71,9 @@ for MOUNT_PATH in "$MOUNT_IP_DIR"/*; do
 done
 
 # Remove the NAS IP directory if all mounts were successfully unmounted
-if ! mountpoint -q "$MOUNT_IP_DIR"; then
-  echo "Removing empty directory: $MOUNT_IP_DIR"
-  rmdir "$MOUNT_IP_DIR"
-fi
+# if ! mountpoint -q "$MOUNT_IP_DIR"; then
+#   echo "Removing empty directory: $MOUNT_IP_DIR"
+#   rmdir "$MOUNT_IP_DIR"
+# fi
 
 echo "All NAS shares unmounted for IP $NAS_IP."

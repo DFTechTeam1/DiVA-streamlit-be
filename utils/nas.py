@@ -1,7 +1,7 @@
 import http
 import json
 from pathlib import Path
-from utils.helper import local_time
+from utils.helper import CustomHelper
 from utils.logger import logging
 from typing import Optional, Literal
 from src.secret import Config
@@ -19,6 +19,7 @@ class NasIntegration:
             "192.168.100.105",
         ] = ip_address
         self.formatted_data: Optional[dict] = None
+        self.helper = CustomHelper()
 
     def port_matcher(self, ip_address: str) -> str:
         if ip_address.endswith("1"):
@@ -81,7 +82,11 @@ class NasIntegration:
 
     def format_response(self, api_response: list) -> dict:
         logging.info("Formatting API response.")
-        formatted = [f"//{self.ip_address}{entry['path']}" for entry in api_response]
+        formatted = [
+            f"//{self.ip_address}{entry['path']}"
+            for entry in api_response
+            if " " not in entry["path"]
+        ]
         self.formatted_data = {"paths": formatted}
 
         return self.formatted_data
@@ -92,7 +97,7 @@ class NasIntegration:
         ip_directory = project_root / "temp" / self.ip_address
         ip_directory.mkdir(parents=True, exist_ok=True)
 
-        file_path = ip_directory / f"{local_time()}.json"
+        file_path = ip_directory / f"{self.helper.local_time()}.json"
 
         logging.info(f"Saving shared folder data into {ip_directory} directory.")
 

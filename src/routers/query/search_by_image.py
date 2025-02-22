@@ -4,16 +4,18 @@ from PIL import Image
 from utils.logger import logging
 from utils.query import QueryDatabase
 from fastapi import APIRouter, status, Depends
-from utils.siglip import CustomSigLipModel
+from utils.custom_model.siglip import CustomSigLipModel
 from src.schema.request_format import SearchByImage
 from sqlalchemy.ext.asyncio import AsyncSession
 from services.postgres.connection import get_db
 from src.schema.response import ResponseDefault, Pagination
 from services.postgres.models import ClientPreview
+from utils.helper import CustomHelper
 from utils.error.custom_error import DiVA, ServiceError, DataNotFoundError
 
 router = APIRouter(tags=["Query"], prefix="/query")
 predictor = CustomSigLipModel(model_path="models/SIGLIP_custom_model.pth")
+helper = CustomHelper()
 
 
 async def search_by_image_endpoint(
@@ -23,6 +25,7 @@ async def search_by_image_endpoint(
     response = ResponseDefault()
     pagination = Pagination()
     query = QueryDatabase(session=db)
+    helper.find_image(directory="mount/192.168.100.105/Dfactory/client_preview")
 
     try:
         logging.info(

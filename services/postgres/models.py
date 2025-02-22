@@ -1,13 +1,15 @@
 from datetime import datetime
-from utils.helper import local_time
+from utils.helper import CustomHelper
 from sqlmodel import SQLModel, Field
 from services.postgres.connection import database_connection
+
+helper = CustomHelper()
 
 
 class ClientPreview(SQLModel, table=True):
     __tablename__ = "client_preview"
     id: int = Field(primary_key=True)
-    created_at: datetime = Field(default=local_time())
+    created_at: datetime = Field(default=helper.local_time())
     updated_at: datetime = Field(default=None, nullable=True)
     filepath: str = Field(default=None)
     filename: str = Field(default=None)
