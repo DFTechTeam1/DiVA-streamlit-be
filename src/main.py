@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from src.secret import Config
-from src.routers import health_check
+from src.routers import health_check, stream_image
 from src.routers.query import search_by_image
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
@@ -44,4 +44,5 @@ app.add_middleware(
 )
 
 app.include_router(health_check.router)
+app.include_router(stream_image.router)
 app.include_router(search_by_image.router)
