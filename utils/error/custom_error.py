@@ -42,31 +42,19 @@ class ServiceError(DiVA):
     pass
 
 
+class RequestValidationError(DiVA):
+    """Failures occured when server not satisfied from user request."""
+
+    pass
+
+
 class DataNotFoundError(DiVA):
     """Error occurred when target data not found."""
 
     pass
 
 
-class ServicesConnectionError(DiVA):
-    """Error occurred when try to connecting third party services."""
-
-    pass
-
-
 class DatabaseQueryError(DiVA):
     """Error occurred when performing database query."""
-
-    pass
-
-
-class NasIntegrationError(DiVA):
-    """Error occurred when performing query, data view, etc into NAS."""
-
-    pass
-
-
-class AccessUnauthorized(DiVA):
-    """Error occurred when user with blacklisted IP try to access server."""
 
     pass

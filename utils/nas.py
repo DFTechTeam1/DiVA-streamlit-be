@@ -5,7 +5,7 @@ from utils.helper import CustomHelper
 from utils.logger import logging
 from typing import Optional, Literal
 from src.secret import Config
-from utils.error.custom_error import NasIntegrationError
+from utils.error.custom_error import RequestValidationError
 
 
 class NasIntegration:
@@ -37,7 +37,7 @@ class NasIntegration:
             response = conn.getresponse()
 
             if response.status != 200:
-                raise NasIntegrationError(
+                raise RequestValidationError(
                     detail=f"HTTP {response.status}: {response.reason}"
                 )
 
@@ -46,7 +46,7 @@ class NasIntegration:
 
         except Exception as e:
             logging.error(f"Error ocurred during request: {e}")
-            raise NasIntegrationError(detail=str(e))
+            raise RequestValidationError(detail=str(e))
 
         finally:
             conn.close()
@@ -63,7 +63,7 @@ class NasIntegration:
         if not response.get("success"):
             logging.error(f"Unable to perform login to {self.ip_address}.")
             error_msg = response.get("error", {})
-            raise NasIntegrationError(detail=error_msg)
+            raise RequestValidationError(detail=error_msg)
 
         return response["data"]["sid"]
 
@@ -76,7 +76,7 @@ class NasIntegration:
         if not response.get("success"):
             logging.error(f"Unable to retrieve shared folders from {self.ip_address}.")
             error_msg = response.get("error", {})
-            raise NasIntegrationError(detail=error_msg)
+            raise RequestValidationError(detail=error_msg)
 
         return response["data"]["shares"]
 

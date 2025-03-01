@@ -4,10 +4,9 @@ import json
 from PIL import Image
 from torch import Tensor
 from torch.nn import Module
+from utils.formatter import CustomFormatter
 from utils.logger import logging
-from collections import OrderedDict
 from typing import Literal, Optional
-from utils.preprocessing import ImageProcessing
 from sentence_transformers import SentenceTransformer, util
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 
@@ -59,21 +58,8 @@ class CLIP:
         logging.info("Query process completed.")
         return results
 
-    def filter_output(self, actual_path: list, clip_result: list) -> list:
-        formatted_results = []
 
-        for entry in clip_result:
-            formatted_results.append(
-                {
-                    "filepath": actual_path[entry["corpus_id"]],
-                    "accuracy": round(entry["score"], 2),
-                }
-            )
-
-        return formatted_results
-
-
-class SigLIP(ImageProcessing):
+class SigLIP(CustomFormatter):
     def __init__(self, model_path: str = "models/SIGLIP_custom_model.pth"):
         super().__init__()
         self.model_path = model_path
@@ -95,7 +81,7 @@ class SigLIP(ImageProcessing):
             id2label=self.trained_label,
         )
 
-        formatted_state = self.format_architecture(state_dict=loaded_state)
+        formatted_state = self.format_cls_model_architecture(state_dict=loaded_state)
         loaded_model.load_state_dict(formatted_state, strict=False)
         loaded_model.to(self.device)
         loaded_model.eval()
@@ -110,24 +96,9 @@ class SigLIP(ImageProcessing):
         with open(self.label_path, "r") as file:
             logging.info("Load trained label.")
             label = json.load(file)
-            formatted_label = self.format_label(label=label)
+            formatted_label = self.format_trained_cls_label(label=label)
 
         return formatted_label
-
-    def format_architecture(self, state_dict: dict) -> dict:
-        logging.info("Formating model architecture.")
-        formatted_state = OrderedDict()
-        for key, value in state_dict.items():
-            new_key = key.replace("module.", "")
-            formatted_state[new_key] = value
-        return formatted_state
-
-    def format_label(self, label: dict) -> dict:
-        logging.info("Formatting trained label.")
-        return {int(key): value for key, value in label.items()}
-
-    def format_predicted_data(self, predicted_label: dict) -> dict:
-        return {label: True for label, score in predicted_label.items()}
 
     def load_image(self, decoded_image: Image) -> Optional[dict]:
         try:

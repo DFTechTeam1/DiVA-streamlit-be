@@ -3,10 +3,8 @@ from utils.error.custom_error import create_exception_handler
 from utils.error.custom_error import (
     DiVA,
     DataNotFoundError,
-    ServicesConnectionError,
     DatabaseQueryError,
-    NasIntegrationError,
-    AccessUnauthorized,
+    RequestValidationError,
 )
 
 
@@ -28,14 +26,6 @@ def register_exception_handlers(app: FastAPI) -> None:
     )
 
     app.add_exception_handler(
-        exc_class_or_status_code=ServicesConnectionError,
-        handler=create_exception_handler(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail_message="Service currently not available.",
-        ),
-    )
-
-    app.add_exception_handler(
         exc_class_or_status_code=DatabaseQueryError,
         handler=create_exception_handler(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -44,18 +34,10 @@ def register_exception_handlers(app: FastAPI) -> None:
     )
 
     app.add_exception_handler(
-        exc_class_or_status_code=NasIntegrationError,
+        exc_class_or_status_code=RequestValidationError,
         handler=create_exception_handler(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail_message="Request into NAS not eligible.",
-        ),
-    )
-
-    app.add_exception_handler(
-        exc_class_or_status_code=AccessUnauthorized,
-        handler=create_exception_handler(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail_message="Blacklist certain IP address to access the service.",
+            detail_message="Request payload not eligible.",
         ),
     )
 
