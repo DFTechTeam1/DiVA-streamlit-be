@@ -57,6 +57,7 @@ async def search_by_image_endpoint(
             cls_predicted = cls_model.predict(
                 decoded_image=decoded_image, threshold=schema.threshold
             )
+
             if not cls_predicted:
                 raise DataNotFoundError(
                     detail="Prediction failed, please lower the threshold and try again."
@@ -67,7 +68,7 @@ async def search_by_image_endpoint(
                 table=ClientPreview,
                 fetch="all",
                 filter="or",
-                limit=150,
+                limit=schema.image_per_page,
                 **filters,
             )
 
@@ -87,7 +88,7 @@ async def search_by_image_endpoint(
             query_image = query_model.search(
                 query=decoded_image,
                 encoded_image=custom_encoding,
-                k=schema.image_per_page,
+                k=50,
             )
             formatted_result = formatter.format_clip_output(
                 actual_path=formatted_path, clip_result=query_image
@@ -107,6 +108,7 @@ async def search_by_image_endpoint(
             response.message = "Prediction successful."
             response.data = pagination.model_dump()
         else:
+            logging.info("Skipping image classification step.")
             filters = formatter.format_cls_label(
                 data=validated_label, target_type="dict"
             )
@@ -115,7 +117,7 @@ async def search_by_image_endpoint(
                 table=ClientPreview,
                 fetch="all",
                 filter="or",
-                limit=150,
+                limit=schema.image_per_page,
                 offset=(schema.page * schema.image_per_page) - schema.image_per_page,
                 **filters,
             )
@@ -133,7 +135,7 @@ async def search_by_image_endpoint(
                 query_image = query_model.search(
                     query=decoded_image,
                     encoded_image=custom_encoding,
-                    k=schema.image_per_page,
+                    k=50,
                 )
                 formatted_result = formatter.format_clip_output(
                     actual_path=formatted_path, clip_result=query_image
@@ -156,6 +158,8 @@ async def search_by_image_endpoint(
         end_time = helper.local_time()
         elapsed_time = end_time - start_time
         logging.info(f"Elapsed time: {elapsed_time}")
+
+        print
 
     except DiVA:
         raise
