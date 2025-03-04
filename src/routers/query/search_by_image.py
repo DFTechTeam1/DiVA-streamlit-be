@@ -1,6 +1,6 @@
 from utils.logger import logging
 from utils.query import QueryDatabase
-from utils.model import SigLIP, CLIP
+from utils.model import siglip_model, clip_model
 from utils.helper import CustomHelper
 from utils.validator import RequestValidator
 from utils.preprocessing import ImageProcessing
@@ -31,16 +31,12 @@ async def search_by_image_endpoint(
     formatter = CustomFormatter()
     validator = RequestValidator()
 
-    # Model
-    cls_model = SigLIP()
-    query_model = CLIP(model_name=schema.base_model)
-
     # Database
     query = QueryDatabase(session=db)
 
     # Classification label
     trained_label = formatter.format_cls_label(
-        data=cls_model.trained_label, target_type="list"
+        data=siglip_model.trained_label, target_type="list"
     )
     next_page, validated_label = validator.validate_label(
         actual_label=trained_label, predicted_label=schema.prediction_label
@@ -54,7 +50,7 @@ async def search_by_image_endpoint(
             logging.info("Performing query images.")
             decoded_image = processor.decode_image(encoded_image=schema.encoded_image)
 
-            cls_predicted = cls_model.predict(
+            cls_predicted = siglip_model.predict(
                 decoded_image=decoded_image, threshold=schema.threshold
             )
 
@@ -84,8 +80,8 @@ async def search_by_image_endpoint(
             )
             processed_image = processor.process_image(image_paths=formatted_path)
 
-            custom_encoding = query_model.encode(image=processed_image)
-            query_image = query_model.search(
+            custom_encoding = clip_model.encode(image=processed_image)
+            query_image = clip_model.search(
                 query=decoded_image,
                 encoded_image=custom_encoding,
                 k=50,
@@ -127,12 +123,12 @@ async def search_by_image_endpoint(
                 )
                 processed_image = processor.process_image(image_paths=formatted_path)
 
-                custom_encoding = query_model.encode(image=processed_image)
+                custom_encoding = clip_model.encode(image=processed_image)
 
                 decoded_image = processor.decode_image(
                     encoded_image=schema.encoded_image
                 )
-                query_image = query_model.search(
+                query_image = clip_model.search(
                     query=decoded_image,
                     encoded_image=custom_encoding,
                     k=50,
@@ -158,8 +154,6 @@ async def search_by_image_endpoint(
         end_time = helper.local_time()
         elapsed_time = end_time - start_time
         logging.info(f"Elapsed time: {elapsed_time}")
-
-        print
 
     except DiVA:
         raise

@@ -137,3 +137,11 @@ class SigLIP(CustomFormatter):
             return None
 
         return predicted_labels if predicted_labels else None
+
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+logging.info("Loading models...")
+siglip_model = SigLIP()
+clip_model = CLIP()
+logging.info("Models loaded successfully.")
