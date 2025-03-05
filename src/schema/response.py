@@ -19,8 +19,3 @@ class Pagination(BaseModel):
         ge=1,
         description="Total similar image for uploaded data based on query database.",
     )
-    total_chungked_image: Optional[int] = Field(
-        default=None,
-        ge=1,
-        description="Total chuked image based on pagination on relative offset and limit.",
-    )

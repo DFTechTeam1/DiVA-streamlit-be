@@ -1,11 +1,8 @@
-from typing import Optional, Literal
+from typing import Optional
 from pydantic import BaseModel, Field
 
 
 class SearchByImage(BaseModel):
-    base_model: Literal["clip-ViT-B-32", "clip-ViT-B-16", "clip-ViT-L-14"] = (
-        "clip-ViT-B-32"
-    )
     encoded_image: str = None
     threshold: float = Field(
         default=0.2,

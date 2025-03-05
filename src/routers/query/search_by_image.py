@@ -44,6 +44,7 @@ async def search_by_image_endpoint(
 
     # Utilities
     start_time = helper.local_time()
+    image_per_page = 50
 
     try:
         if not next_page:
@@ -64,7 +65,7 @@ async def search_by_image_endpoint(
                 table=ClientPreview,
                 fetch="all",
                 filter="or",
-                limit=schema.image_per_page,
+                limit=image_per_page,
                 **filters,
             )
 
@@ -84,22 +85,18 @@ async def search_by_image_endpoint(
             query_image = clip_model.search(
                 query=decoded_image,
                 encoded_image=custom_encoding,
-                k=50,
+                k=image_per_page,
             )
             formatted_result = formatter.format_clip_output(
                 actual_path=formatted_path, clip_result=query_image
             )
-            total_page = (
-                schema.image_per_page + len(formatted_result) - 1
-            ) // schema.image_per_page
-
             total_image = len(query_all)
+            total_page = (total_image + len(formatted_result) - 1) // image_per_page
 
             pagination.prediction_label = cls_predicted
             pagination.similar_image = formatted_result
             pagination.total_image = total_image
             pagination.total_page = total_page
-            pagination.total_chungked_image = schema.image_per_page
 
             response.message = "Prediction successful."
             response.data = pagination.model_dump()
@@ -113,8 +110,15 @@ async def search_by_image_endpoint(
                 table=ClientPreview,
                 fetch="all",
                 filter="or",
-                limit=schema.image_per_page,
-                offset=(schema.page * schema.image_per_page) - schema.image_per_page,
+                limit=image_per_page,
+                offset=(schema.page * image_per_page) - image_per_page,
+                **filters,
+            )
+
+            query_all = await query.find(
+                table=ClientPreview,
+                fetch="all",
+                filter="or",
                 **filters,
             )
             if filtered_image:
@@ -131,21 +135,18 @@ async def search_by_image_endpoint(
                 query_image = clip_model.search(
                     query=decoded_image,
                     encoded_image=custom_encoding,
-                    k=50,
+                    k=image_per_page,
                 )
                 formatted_result = formatter.format_clip_output(
                     actual_path=formatted_path, clip_result=query_image
                 )
-
-                total_chungked_image = (
-                    len(formatted_result) if formatted_result else None
-                )
+                total_image = len(query_all)
+                total_page = (total_image + len(formatted_result) - 1) // image_per_page
 
                 pagination.prediction_label = filters
                 pagination.similar_image = formatted_result
-                pagination.total_page = None
-                pagination.total_image = None
-                pagination.total_chungked_image = total_chungked_image
+                pagination.total_page = total_page
+                pagination.total_image = len(query_all)
                 response.message = f"Query page {schema.page} successful."
                 response.data = pagination.model_dump()
             else:
