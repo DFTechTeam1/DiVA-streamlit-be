@@ -35,6 +35,7 @@ class ImageProcessing:
     def decode_image(self, encoded_image: str) -> type[Image]:
         logging.info("Start decoding image.")
         image_data = base64.b64decode(encoded_image)
+        print(image_data)
         with BytesIO(image_data) as image_stream:
             image = Image.open(image_stream).convert("RGB")
         logging.info("Decoding image completed.")

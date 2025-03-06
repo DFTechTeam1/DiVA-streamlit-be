@@ -1,8 +1,9 @@
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+from utils.validator import Base64ValidatorMixin
 
 
-class SearchByImage(BaseModel):
+class SearchByImage(BaseModel, Base64ValidatorMixin):
     encoded_image: str = None
     threshold: float = Field(
         default=0.2,
@@ -11,7 +12,9 @@ class SearchByImage(BaseModel):
         description="Threshold accuracy for classification model.",
     )
     page: int = Field(default=1, ge=1, description="Current page for extracted data.")
-    image_per_page: int = Field(
-        default=50, ge=1, description="Splitted total image into current chunk data."
-    )
     prediction_label: Optional[list] = None
+
+    @field_validator("encoded_image")
+    @classmethod
+    def validate_base64(cls, value: str) -> str:
+        return Base64ValidatorMixin.validate_base64(value)

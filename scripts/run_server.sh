@@ -18,6 +18,7 @@ if [ -z "$1" ]; then
 fi
 
 ENV_FILE=""
+DEFAULT_PORT="14000"
 
 # Parse arguments
 case "$1" in
@@ -50,8 +51,14 @@ esac
 # Load the environment variables
 export $(grep -v '^#' $ENV_FILE | xargs)
 
-# Set HOST from IP_HOST in .env file
+# Set HOST from IP_HOST in .env file (default to 127.0.0.1)
 HOST=${IP_HOST:-"127.0.0.1"}
+
+# Check if APPLICATION_PORT is set, otherwise use DEFAULT_PORT and log a message
+if [ -z "$APPLICATION_PORT" ]; then
+  echo "Warning: APPLICATION_PORT not provided in $ENV_FILE. Using default port $DEFAULT_PORT."
+  APPLICATION_PORT=$DEFAULT_PORT
+fi
 
 # Checking OS Environment
 echo "Checking OS Environment"
@@ -79,6 +86,6 @@ else
   esac
 fi
 
-# Start the server
-echo "Running uvicorn server on $HOST:8000"
-uvicorn src.main:app --host "$HOST" --port 8000 $RELOAD_FLAG
+# Start the server with the resolved host and port
+echo "Running uvicorn server on $HOST:$APPLICATION_PORT"
+uvicorn src.main:app --host "$HOST" --port "$APPLICATION_PORT" $RELOAD_FLAG
