@@ -11,6 +11,7 @@ class SearchByImage(BaseModel, Base64ValidatorMixin):
         le=1.0,
         description="Threshold accuracy for classification model.",
     )
+    query_image: int = Field(default=50, ge=50, le=200)
     page: int = Field(default=1, ge=1, description="Current page for extracted data.")
     prediction_label: Optional[list] = None
 

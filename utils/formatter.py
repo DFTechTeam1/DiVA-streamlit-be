@@ -1,3 +1,4 @@
+import urllib.parse
 from utils.logger import logging
 from collections import OrderedDict
 from typing import Literal, Union
@@ -35,14 +36,19 @@ class CustomFormatter:
         logging.info("Formatting trained label.")
         return {int(key): value for key, value in label.items()}
 
-    def format_clip_output(self, actual_path: list, clip_result: list) -> list:
+    def format_clip_output(
+        self, actual_path: list, clip_result: list, base_url: str
+    ) -> list:
         formatted_results = []
 
         for entry in clip_result:
+            image_path = actual_path[entry["corpus_id"]]
+            encoded_path = urllib.parse.quote(image_path, safe="")
             formatted_results.append(
                 {
-                    "filepath": actual_path[entry["corpus_id"]],
+                    "filepath": image_path,
                     "accuracy": round(entry["score"], 2),
+                    "stream_image": f"{base_url}/query/stream-image?image_path={encoded_path}",
                 }
             )
 

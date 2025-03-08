@@ -12,6 +12,7 @@ from services.postgres.models import ClientPreview
 from services.postgres.connection import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import APIRouter, status, Depends
+from src.secret import Config
 
 router = APIRouter(tags=["Query"], prefix="/query")
 
@@ -38,16 +39,18 @@ async def search_by_image_endpoint(
     trained_label = formatter.format_cls_label(
         data=siglip_model.trained_label, target_type="list"
     )
-    next_page, validated_label = validator.validate_label(
+    validated_label = validator.validate_label(
         actual_label=trained_label, predicted_label=schema.prediction_label
     )
 
     # Utilities
+    config = Config()
     start_time = helper.local_time()
-    image_per_page = 50
+    IMAGE_PER_PAGE = 50
+    BASE_URL = f"http://{config.IP_HOST}:{config.APPLICATION_PORT}"
 
     try:
-        if not next_page:
+        if not validated_label:
             logging.info("Performing query images.")
             decoded_image = processor.decode_image(encoded_image=schema.encoded_image)
 
@@ -65,7 +68,7 @@ async def search_by_image_endpoint(
                 table=ClientPreview,
                 fetch="all",
                 filter="or",
-                limit=image_per_page,
+                limit=schema.query_image,
                 **filters,
             )
 
@@ -79,25 +82,26 @@ async def search_by_image_endpoint(
             formatted_path = formatter.format_prefix_path(
                 filtered_image=filtered_image, prefix_path="mount/"
             )
+
             processed_image = processor.process_image(image_paths=formatted_path)
 
             custom_encoding = clip_model.encode(image=processed_image)
             query_image = clip_model.search(
                 query=decoded_image,
                 encoded_image=custom_encoding,
-                k=image_per_page,
+                k=IMAGE_PER_PAGE,
             )
             formatted_result = formatter.format_clip_output(
-                actual_path=formatted_path, clip_result=query_image
+                actual_path=formatted_path, clip_result=query_image, base_url=BASE_URL
             )
+
             total_image = len(query_all)
-            total_page = (total_image + len(formatted_result) - 1) // image_per_page
+            total_page = (total_image + len(formatted_result) - 1) // schema.query_image
 
             pagination.prediction_label = cls_predicted
             pagination.similar_image = formatted_result
             pagination.total_image = total_image
             pagination.total_page = total_page
-
             response.message = "Prediction successful."
             response.data = pagination.model_dump()
         else:
@@ -110,8 +114,8 @@ async def search_by_image_endpoint(
                 table=ClientPreview,
                 fetch="all",
                 filter="or",
-                limit=image_per_page,
-                offset=(schema.page * image_per_page) - image_per_page,
+                limit=schema.query_image,
+                offset=(schema.page * schema.query_image) - schema.query_image,
                 **filters,
             )
 
@@ -135,13 +139,17 @@ async def search_by_image_endpoint(
                 query_image = clip_model.search(
                     query=decoded_image,
                     encoded_image=custom_encoding,
-                    k=image_per_page,
+                    k=IMAGE_PER_PAGE,
                 )
                 formatted_result = formatter.format_clip_output(
-                    actual_path=formatted_path, clip_result=query_image
+                    actual_path=formatted_path,
+                    clip_result=query_image,
+                    base_url=BASE_URL,
                 )
                 total_image = len(query_all)
-                total_page = (total_image + len(formatted_result) - 1) // image_per_page
+                total_page = (
+                    total_image + len(formatted_result) - 1
+                ) // schema.query_image
 
                 pagination.prediction_label = filters
                 pagination.similar_image = formatted_result
@@ -150,7 +158,9 @@ async def search_by_image_endpoint(
                 response.message = f"Query page {schema.page} successful."
                 response.data = pagination.model_dump()
             else:
-                response.message = f"Page {schema.page} dont have any data."
+                raise DataNotFoundError(
+                    detail=f"Page {schema.page} dont have any data."
+                )
 
         end_time = helper.local_time()
         elapsed_time = end_time - start_time
