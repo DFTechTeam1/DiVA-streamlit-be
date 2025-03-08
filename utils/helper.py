@@ -1,9 +1,13 @@
 import os
+import io
+from PIL import Image
 from pathlib import Path
 from utils.logger import logging
 from typing import Optional
 from pytz import timezone
 from datetime import datetime
+from fastapi.responses import StreamingResponse
+from utils.error.custom_error import DataNotFoundError
 
 
 class CustomHelper:
@@ -28,3 +32,23 @@ class CustomHelper:
 
         logging.info(f"Loaded {len(images)} images from {directory}.")
         return images
+
+    def stream_image(self, file_path: str) -> StreamingResponse:
+        if not os.path.exists(file_path):
+            logging.error(f"Image file {file_path} does not exist!")
+            raise DataNotFoundError(detail=f"Image file {file_path} not found.")
+
+        try:
+            with Image.open(file_path) as img:
+                img_format = img.format
+                img_buffer = io.BytesIO()
+                img.save(img_buffer, format=img_format)
+                img_buffer.seek(0)
+
+            return StreamingResponse(
+                img_buffer, media_type=f"image/{img_format.lower()}"
+            )
+
+        except Exception as e:
+            logging.error(f"Error while processing image {file_path}: {e}")
+            raise DataNotFoundError(detail=f"Error processing image {file_path}.")
