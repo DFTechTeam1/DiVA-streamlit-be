@@ -1,3 +1,4 @@
+from pprint import pprint
 from utils.logger import logging
 from utils.query import QueryDatabase
 from utils.model import siglip_model, clip_model
@@ -47,6 +48,7 @@ async def search_by_image_endpoint(
     config = Config()
     start_time = helper.local_time()
     IMAGE_PER_PAGE = 50
+    QUERY_PER_PAGE = 200
     BASE_URL = f"http://{config.IP_HOST}:{config.APPLICATION_PORT}"
 
     try:
@@ -68,7 +70,7 @@ async def search_by_image_endpoint(
                 table=ClientPreview,
                 fetch="all",
                 filter="or",
-                limit=schema.query_image,
+                limit=QUERY_PER_PAGE,
                 **filters,
             )
 
@@ -96,8 +98,7 @@ async def search_by_image_endpoint(
             )
 
             total_image = len(query_all)
-            total_page = (total_image + len(formatted_result) - 1) // schema.query_image
-
+            total_page = total_image // QUERY_PER_PAGE
             pagination.prediction_label = cls_predicted
             pagination.similar_image = formatted_result
             pagination.total_image = total_image
@@ -114,8 +115,8 @@ async def search_by_image_endpoint(
                 table=ClientPreview,
                 fetch="all",
                 filter="or",
-                limit=schema.query_image,
-                offset=(schema.page * schema.query_image) - schema.query_image,
+                limit=QUERY_PER_PAGE,
+                offset=(schema.page * QUERY_PER_PAGE) - QUERY_PER_PAGE,
                 **filters,
             )
 
@@ -147,10 +148,7 @@ async def search_by_image_endpoint(
                     base_url=BASE_URL,
                 )
                 total_image = len(query_all)
-                total_page = (
-                    total_image + len(formatted_result) - 1
-                ) // schema.query_image
-
+                total_page = total_image // QUERY_PER_PAGE
                 pagination.prediction_label = filters
                 pagination.similar_image = formatted_result
                 pagination.total_page = total_page
@@ -162,6 +160,7 @@ async def search_by_image_endpoint(
                     detail=f"Page {schema.page} dont have any data."
                 )
 
+        pprint(pagination.model_dump())
         end_time = helper.local_time()
         elapsed_time = end_time - start_time
         logging.info(f"Elapsed time: {elapsed_time}")
