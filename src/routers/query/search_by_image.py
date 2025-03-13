@@ -1,4 +1,3 @@
-from pprint import pprint
 from utils.logger import logging
 from utils.query import QueryDatabase
 from utils.model import siglip_model, clip_model
@@ -9,11 +8,11 @@ from utils.formatter import CustomFormatter
 from utils.error.custom_error import DiVA, ServiceError, DataNotFoundError
 from src.schema.response import ResponseDefault, Pagination
 from src.schema.request_format import SearchByImage
+from src.secret import Config
 from services.postgres.models import ClientPreview
 from services.postgres.connection import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import APIRouter, status, Depends
-from src.secret import Config
 
 router = APIRouter(tags=["Query"], prefix="/query")
 
@@ -52,7 +51,7 @@ async def search_by_image_endpoint(
     BASE_URL = f"http://{config.IP_HOST}:{config.APPLICATION_PORT}"
 
     try:
-        if not validated_label:
+        if schema.page == 1:
             logging.info("Performing query images.")
             decoded_image = processor.decode_image(encoded_image=schema.encoded_image)
 
@@ -65,7 +64,11 @@ async def search_by_image_endpoint(
                     detail="Prediction failed, please lower the threshold and try again."
                 )
 
+            current_image = await query.find(
+                table=ClientPreview, filename=schema.filename
+            )
             filters = formatter.format_cls_label(data=cls_predicted, target_type="dict")
+
             filtered_image = await query.find(
                 table=ClientPreview,
                 fetch="all",
@@ -80,6 +83,12 @@ async def search_by_image_endpoint(
                 filter="or",
                 **filters,
             )
+
+            if current_image:
+                logging.info("Client preview found!")
+                filtered_image.insert(0, current_image)
+            else:
+                logging.warning("Client preview not found.")
 
             formatted_path = formatter.format_prefix_path(
                 filtered_image=filtered_image, prefix_path="mount/"
@@ -160,7 +169,6 @@ async def search_by_image_endpoint(
                     detail=f"Page {schema.page} dont have any data."
                 )
 
-        pprint(pagination.model_dump())
         end_time = helper.local_time()
         elapsed_time = end_time - start_time
         logging.info(f"Elapsed time: {elapsed_time}")

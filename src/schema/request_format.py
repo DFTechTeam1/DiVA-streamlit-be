@@ -5,6 +5,7 @@ from utils.validator import Base64ValidatorMixin
 
 class SearchByImage(BaseModel, Base64ValidatorMixin):
     encoded_image: str = None
+    filename: Optional[str] = None
     threshold: float = Field(
         default=0.2,
         ge=0.1,

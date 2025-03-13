@@ -2,7 +2,6 @@ from utils.logger import logging
 from typing import Literal, Any, Union
 from sqlmodel import SQLModel
 from sqlalchemy import select, insert, update, delete, and_, or_
-from sqlalchemy.engine.row import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.error.custom_error import DatabaseQueryError, DataNotFoundError
 
@@ -20,7 +19,7 @@ class QueryDatabase:
         limit: int = None,
         offset: int = None,
         **kwargs: Any,
-    ) -> Union[list[Row], Row, None]:
+    ) -> Union[list[dict], dict, None]:
         condition = []
 
         if kwargs:
@@ -49,7 +48,7 @@ class QueryDatabase:
                 return [dict(row._mapping) for row in rows] if rows else None
             else:
                 entry = result.fetchone()
-                return entry
+                return dict(entry._mapping) if entry else None
         except Exception as e:
             logging.error(f"Failed to find record in table {table.__name__}: {e}")
             await self._session.rollback()
