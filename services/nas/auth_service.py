@@ -1,4 +1,4 @@
-from utils.nas.integration import NasIntegration
+from services.nas.integration import NasIntegration
 from src.schema.nas_params import LoginNasParams, LogoutNasParams
 from src.secret import NAS_USERNAME, NAS_PASSWORD
 

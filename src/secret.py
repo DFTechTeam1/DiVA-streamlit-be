@@ -1,8 +1,10 @@
 import os
 from dotenv import load_dotenv
 
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
 
-env_file = os.getenv("ENV_FILE", "env/.env.development")
+env_file = os.getenv("ENV_FILE", os.path.join(PROJECT_DIR, "env", ".env.development"))
 
 if os.path.exists(env_file):
     load_dotenv(dotenv_path=env_file)

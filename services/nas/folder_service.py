@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Optional
 from src.schema.nas_params import ListShareNasParams
 from utils.logger import logging
-from utils.nas.integration import NasIntegration
-from utils.nas.decorator import require_login
+from services.nas.integration import NasIntegration
+from services.nas.decorator import require_login
 from utils.helper import local_time
 
 class NasFolderService:

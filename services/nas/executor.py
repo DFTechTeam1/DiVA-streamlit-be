@@ -3,10 +3,9 @@ import asyncio
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
-from utils.logger import logging
-from utils.nas.integration import NasIntegration
-from utils.nas.folder_service import NasFolderService
-from utils.nas.auth_service import NasAuthService
+from services.nas.integration import NasIntegration
+from services.nas.folder_service import NasFolderService
+from services.nas.auth_service import NasAuthService
 
 IP_ADDRESS = [
     "192.168.100.101",
