@@ -2,7 +2,7 @@
 
 # Show usage information
 show_help() {
-  echo "Usage: sh scripts/mount_nas.sh [ --<NAS_IP> ]"
+  echo "Usage: sh scripts/mount_nas.sh [ --ip_address ]"
   echo ""
   echo "Example: sh scripts/mount_nas.sh --192.168.100.105"
   echo ""

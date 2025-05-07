@@ -3,7 +3,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from utils.logger import logging
-from utils.nas import NasIntegration
+from utils.changed_nas import NasIntegration
 
 if len(sys.argv) != 2:
     logging.info("Usage: python utils/executor.py <IP_ADDRESS>")

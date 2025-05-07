@@ -58,3 +58,9 @@ class DatabaseQueryError(DiVA):
     """Error occurred when performing database query."""
 
     pass
+
+
+class NasIntegrationError(DiVA):
+    """Error occurred when performing connection to NAS."""
+
+    pass

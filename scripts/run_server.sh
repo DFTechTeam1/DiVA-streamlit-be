@@ -2,7 +2,7 @@
 
 # Show usage information
 show_help() {
-  echo "Usage: sh scripts/run_server.sh [ --development | --staging | --production | --help ]"
+  echo "Usage: sh scripts/run_server.sh [ --development | --staging | --production ] | [ --help ]"
   echo ""
   echo "--development    Run the server on localhost and load the .env.development file"
   echo "--staging        Run the server on the staging IP and load the .env.staging file"

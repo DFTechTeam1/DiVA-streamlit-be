@@ -1,7 +1,7 @@
 #!/bin/bash
 
 show_help() {
-    echo "Usage: sh scripts/run_extractor.sh [ --<IP_ADDRESS> | --help ]"
+    echo "Usage: sh scripts/run_extractor.sh [ --ip_address ] | [ --help ]"
     echo ""
     echo "Available IP Addresses:"
     for ip in 192.168.100.101 192.168.100.102 192.168.100.103 192.168.100.104 192.168.100.105; do

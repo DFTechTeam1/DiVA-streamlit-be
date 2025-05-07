@@ -5,6 +5,7 @@ from utils.error.custom_error import (
     DataNotFoundError,
     DatabaseQueryError,
     RequestValidationError,
+    NasIntegrationError,
 )
 
 
@@ -38,6 +39,14 @@ def register_exception_handlers(app: FastAPI) -> None:
         handler=create_exception_handler(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail_message="Request payload not eligible.",
+        ),
+    )
+
+    app.add_exception_handler(
+        exc_class_or_status_code=NasIntegrationError,
+        handler=create_exception_handler(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail_message="Unable to connect into NAS.",
         ),
     )
 

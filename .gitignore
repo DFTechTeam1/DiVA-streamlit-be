@@ -167,3 +167,4 @@ models/*
 mount/*
 temp/*
 sample/*
+*.lock

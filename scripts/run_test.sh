@@ -1,7 +1,7 @@
 #!/bin/sh
 
 show_help() {
-  echo "Usage: sh scripts/run_test [ --development | --staging | --production ] [--unit_test | --api_test | --e2e | --help ]"
+  echo "Usage: sh scripts/run_test [ --development | --staging | --production ] [ --unit_test | --api_test | --e2e ] | [ --help ]"
   echo ""
   echo "Environment Options:"
   echo "  --development    Set the environment to development."
