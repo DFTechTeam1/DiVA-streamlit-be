@@ -2,6 +2,7 @@ from services.nas.integration import NasIntegration
 from src.schema.nas_params import LoginNasParams, LogoutNasParams
 from src.secret import NAS_USERNAME, NAS_PASSWORD
 
+
 class NasAuthService:
     def __init__(self, nas: NasIntegration):
         self.nas = nas
@@ -22,7 +23,7 @@ class NasAuthService:
         )
         self.nas.sid = response["data"]["sid"]
         return None
-    
+
     async def logout(self) -> None:
         params = LogoutNasParams(
             api="SYNO.API.Auth",

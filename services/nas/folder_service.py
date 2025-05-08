@@ -7,15 +7,18 @@ from services.nas.integration import NasIntegration
 from services.nas.decorator import require_login
 from utils.helper import local_time
 
+
 class NasFolderService:
     def __init__(self, nas: NasIntegration):
         self.nas = nas
 
-    def format_response(self, response: list, filter: Optional[str] = None) -> Optional[dict]:
+    def format_response(
+        self, response: list, filter: Optional[str] = None
+    ) -> Optional[dict]:
         if filter:
             paths = [
-                f"//{self.nas.ip_address}/{entry['name']}" 
-                for entry in response 
+                f"//{self.nas.ip_address}/{entry['name']}"
+                for entry in response
                 if (
                     entry["name"].lower().startswith(filter)
                     and " " not in entry["name"]
@@ -25,7 +28,6 @@ class NasFolderService:
                 return {"paths": paths}
 
         return None
-
 
     def migrate_response(self, formatted_response: Optional[dict] = None) -> None:
         if not formatted_response:
@@ -44,7 +46,11 @@ class NasFolderService:
 
     @require_login
     async def list_share(self) -> list:
-        params = ListShareNasParams(api="SYNO.FileStation.List", version=2, method="list_share")
+        params = ListShareNasParams(
+            api="SYNO.FileStation.List", version=2, method="list_share"
+        )
         payload = params.model_dump()
-        response = await self.nas.send_request(api=params.api, params=payload, sid=self.nas.sid)
+        response = await self.nas.send_request(
+            api=params.api, params=payload, sid=self.nas.sid
+        )
         return response["data"]["shares"]
