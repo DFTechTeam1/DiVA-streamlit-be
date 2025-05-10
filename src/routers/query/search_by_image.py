@@ -14,13 +14,13 @@ from services.postgres.connection import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import APIRouter, status, Depends
 
-router = APIRouter(tags=["Query"], prefix="/query")
+router = APIRouter(tags=['Query'], prefix='/query')
 
 
 async def search_by_image_endpoint(
     schema: SearchByImage, db: AsyncSession = Depends(get_db)
 ) -> ResponseDefault:
-    logging.info("Endpoint Search By Image.")
+    logging.info('Endpoint Search By Image.')
 
     # API response model
     response = ResponseDefault()
@@ -36,9 +36,7 @@ async def search_by_image_endpoint(
     query = QueryDatabase(session=db)
 
     # Classification label
-    trained_label = formatter.format_cls_label(
-        data=siglip_model.trained_label, target_type="list"
-    )
+    trained_label = formatter.format_cls_label(data=siglip_model.trained_label, target_type='list')
     validated_label = validator.validate_label(
         actual_label=trained_label, predicted_label=schema.prediction_label
     )
@@ -48,11 +46,11 @@ async def search_by_image_endpoint(
     start_time = helper.local_time()
     IMAGE_PER_PAGE = 50
     QUERY_PER_PAGE = 200
-    BASE_URL = f"http://{config.IP_HOST}:{config.APPLICATION_PORT}"
+    BASE_URL = f'http://{config.IP_HOST}:{config.APPLICATION_PORT}'
 
     try:
         if schema.page == 1:
-            logging.info("Performing query images.")
+            logging.info('Performing query images.')
             decoded_image = processor.decode_image(encoded_image=schema.encoded_image)
 
             cls_predicted = siglip_model.predict(
@@ -61,37 +59,35 @@ async def search_by_image_endpoint(
 
             if not cls_predicted:
                 raise DataNotFoundError(
-                    detail="Prediction failed, please lower the threshold and try again."
+                    detail='Prediction failed, please lower the threshold and try again.'
                 )
 
-            current_image = await query.find(
-                table=ClientPreview, filename=schema.filename
-            )
-            filters = formatter.format_cls_label(data=cls_predicted, target_type="dict")
+            current_image = await query.find(table=ClientPreview, filename=schema.filename)
+            filters = formatter.format_cls_label(data=cls_predicted, target_type='dict')
 
             filtered_image = await query.find(
                 table=ClientPreview,
-                fetch="all",
-                filter="or",
+                fetch='all',
+                filter='or',
                 limit=QUERY_PER_PAGE,
                 **filters,
             )
 
             query_all = await query.find(
                 table=ClientPreview,
-                fetch="all",
-                filter="or",
+                fetch='all',
+                filter='or',
                 **filters,
             )
 
             if current_image:
-                logging.info("Client preview found!")
+                logging.info('Client preview found!')
                 filtered_image.insert(0, current_image)
             else:
-                logging.warning("Client preview not found.")
+                logging.warning('Client preview not found.')
 
             formatted_path = formatter.format_prefix_path(
-                filtered_image=filtered_image, prefix_path="mount/"
+                filtered_image=filtered_image, prefix_path='mount/'
             )
 
             processed_image = processor.process_image(image_paths=formatted_path)
@@ -112,18 +108,16 @@ async def search_by_image_endpoint(
             pagination.similar_image = formatted_result
             pagination.total_image = total_image
             pagination.total_page = total_page
-            response.message = "Prediction successful."
+            response.message = 'Prediction successful.'
             response.data = pagination.model_dump()
         else:
-            logging.info("Skipping image classification step.")
-            filters = formatter.format_cls_label(
-                data=validated_label, target_type="dict"
-            )
+            logging.info('Skipping image classification step.')
+            filters = formatter.format_cls_label(data=validated_label, target_type='dict')
 
             filtered_image = await query.find(
                 table=ClientPreview,
-                fetch="all",
-                filter="or",
+                fetch='all',
+                filter='or',
                 limit=QUERY_PER_PAGE,
                 offset=(schema.page * QUERY_PER_PAGE) - QUERY_PER_PAGE,
                 **filters,
@@ -131,21 +125,19 @@ async def search_by_image_endpoint(
 
             query_all = await query.find(
                 table=ClientPreview,
-                fetch="all",
-                filter="or",
+                fetch='all',
+                filter='or',
                 **filters,
             )
             if filtered_image:
                 formatted_path = formatter.format_prefix_path(
-                    filtered_image=filtered_image, prefix_path="mount/"
+                    filtered_image=filtered_image, prefix_path='mount/'
                 )
                 processed_image = processor.process_image(image_paths=formatted_path)
 
                 custom_encoding = clip_model.encode(image=processed_image)
 
-                decoded_image = processor.decode_image(
-                    encoded_image=schema.encoded_image
-                )
+                decoded_image = processor.decode_image(encoded_image=schema.encoded_image)
                 query_image = clip_model.search(
                     query=decoded_image,
                     encoded_image=custom_encoding,
@@ -162,30 +154,28 @@ async def search_by_image_endpoint(
                 pagination.similar_image = formatted_result
                 pagination.total_page = total_page
                 pagination.total_image = len(query_all)
-                response.message = f"Query page {schema.page} successful."
+                response.message = f'Query page {schema.page} successful.'
                 response.data = pagination.model_dump()
             else:
-                raise DataNotFoundError(
-                    detail=f"Page {schema.page} dont have any data."
-                )
+                raise DataNotFoundError(detail=f'Page {schema.page} dont have any data.')
 
         end_time = helper.local_time()
         elapsed_time = end_time - start_time
-        logging.info(f"Elapsed time: {elapsed_time}")
+        logging.info(f'Elapsed time: {elapsed_time}')
 
     except DiVA:
         raise
 
     except Exception as e:
-        logging.error(f"Error in search_by_image_endpoint: {e}")
-        raise ServiceError(detail="Internal Server Error.", name="DiVA")
+        logging.error(f'Error in search_by_image_endpoint: {e}')
+        raise ServiceError(detail='Internal Server Error.', name='DiVA')
 
     return response
 
 
 router.add_api_route(
-    methods=["POST"],
-    path="/image",
+    methods=['POST'],
+    path='/image',
     response_model=ResponseDefault,
     endpoint=search_by_image_endpoint,
     status_code=status.HTTP_200_OK,

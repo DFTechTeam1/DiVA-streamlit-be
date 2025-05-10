@@ -19,10 +19,10 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    root_path="/api/v1",
-    title="DiVA",
-    description="Backend service for DFactory Image Retrieval.",
-    version="1.0.0",
+    root_path='/api/v1',
+    title='DiVA',
+    description='Backend service for DFactory Image Retrieval.',
+    version='1.0.0',
     lifespan=lifespan,
 )
 
@@ -30,9 +30,9 @@ register_exception_handlers(app=app)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=['*'],
+    allow_methods=['*'],
+    allow_headers=['*'],
 )
 
 app.add_middleware(middleware_class=SessionMiddleware, secret_key=MIDDLEWARE_SECRET_KEY)

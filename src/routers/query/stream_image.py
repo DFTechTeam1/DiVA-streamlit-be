@@ -4,7 +4,7 @@ from fastapi import APIRouter, status
 from fastapi.responses import StreamingResponse
 from utils.helper import CustomHelper
 
-router = APIRouter(tags=["Query"], prefix="/query")
+router = APIRouter(tags=['Query'], prefix='/query')
 helper = CustomHelper()
 
 CHUNK_SIZE = 16 * 256
@@ -13,18 +13,18 @@ CHUNK_SIZE = 16 * 256
 async def stream_image(image_path: str):
     async def file_iterator():
         try:
-            async with aiofiles.open(image_path, mode="rb") as f:
+            async with aiofiles.open(image_path, mode='rb') as f:
                 while chunk := await f.read(CHUNK_SIZE):
                     yield chunk
         except Exception as e:
-            logging.info(f"Error streaming {image_path}: {str(e)}")
+            logging.info(f'Error streaming {image_path}: {str(e)}')
 
-    return StreamingResponse(file_iterator(), media_type="image/jpeg")
+    return StreamingResponse(file_iterator(), media_type='image/jpeg')
 
 
 router.add_api_route(
-    methods=["GET"],
-    path="/stream-image",
+    methods=['GET'],
+    path='/stream-image',
     endpoint=stream_image,
     status_code=status.HTTP_200_OK,
 )

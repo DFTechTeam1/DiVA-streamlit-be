@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 
 class NasApi(BaseModel):
-    api: Literal["SYNO.API.Auth", "SYNO.FileStation.List"]
+    api: Literal['SYNO.API.Auth', 'SYNO.FileStation.List']
 
 
 class NasVersion(BaseModel):
@@ -11,17 +11,17 @@ class NasVersion(BaseModel):
 
 
 class NasMethod(BaseModel):
-    method: Literal["login", "logout", "list_share"]
+    method: Literal['login', 'logout', 'list_share']
 
 
 class NasSession(BaseModel):
-    session: Literal["FileStation"]
+    session: Literal['FileStation']
 
 
 class LoginNasParams(NasApi, NasVersion, NasMethod, NasSession):
     account: str
     passwd: str
-    format: Literal["cookie"]
+    format: Literal['cookie']
 
 
 class LogoutNasParams(NasApi, NasVersion, NasMethod, NasSession):

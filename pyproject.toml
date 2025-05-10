@@ -28,3 +28,12 @@ dependencies = [
     "torchvision>=0.22.0",
     "uvicorn>=0.34.2",
 ]
+
+
+[tool.ruff]
+line-length = 100
+indent-width = 4
+
+
+[tool.ruff.format]
+quote-style = "single"

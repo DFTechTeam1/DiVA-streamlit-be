@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 class DiVA(Exception):
     def __init__(
         self,
-        detail: str = "Service is unavailable.",
+        detail: str = 'Service is unavailable.',
         name: str = None,
     ) -> None:
         self.detail = detail
@@ -18,19 +18,19 @@ class DiVA(Exception):
 def create_exception_handler(
     status_code: int, detail_message: str
 ) -> Callable[[Request, DiVA], JSONResponse]:
-    detail = {"message": detail_message}
+    detail = {'message': detail_message}
 
     async def exception_handler(_: Request, exc: DiVA) -> JSONResponse:
         if exc:
-            detail["message"] = exc.detail
+            detail['message'] = exc.detail
 
         if exc.name:
-            detail["message"] = f"{detail['message']} [{exc.name}]"
+            detail['message'] = f'{detail["message"]} [{exc.name}]'
 
         logging.error(exc)
         return JSONResponse(
             status_code=status_code,
-            content={"detail": detail["message"]},
+            content={'detail': detail['message']},
         )
 
     return exception_handler

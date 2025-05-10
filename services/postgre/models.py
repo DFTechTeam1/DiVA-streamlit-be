@@ -5,7 +5,7 @@ from services.postgre.connection import database_connection
 
 
 class ClientPreview(SQLModel, table=True):
-    __tablename__ = "client_preview"
+    __tablename__ = 'client_preview'
     id: int = Field(primary_key=True)
     created_at: datetime = Field(default=local_time())
     updated_at: datetime = Field(default=None, nullable=True)
@@ -27,6 +27,7 @@ class ClientPreview(SQLModel, table=True):
     cool: bool = Field(default=False)
     neutral: bool = Field(default=False)
     gold: bool = Field(default=False)
+
 
 async def database_migration():
     engine = database_connection()

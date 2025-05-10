@@ -24,9 +24,9 @@ from transformers import (
 
 class CustomModel:
     def __init__(self, model_path: str, label_path: str):
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.base_model = "google/siglip-so400m-patch14-384"
-        self.problem_type = "multi_label_classification"
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.base_model = 'google/siglip-so400m-patch14-384'
+        self.problem_type = 'multi_label_classification'
         self.model_path = model_path
         self.label_path = label_path
         self.labels = self._load_labels()
@@ -45,7 +45,7 @@ class CustomModel:
         return config
 
     def _format_model_state(self, state_dict: dict) -> dict:
-        return OrderedDict((k.replace("module.", ""), v) for k, v in state_dict.items())
+        return OrderedDict((k.replace('module.', ''), v) for k, v in state_dict.items())
 
     def _load_model(self):
         config = self._load_config()
@@ -55,9 +55,9 @@ class CustomModel:
         missing_keys, unexpected_keys = model.load_state_dict(formatted_state)
 
         if missing_keys:
-            logging.warning(f"Missing keys: {missing_keys}")
+            logging.warning(f'Missing keys: {missing_keys}')
         if unexpected_keys:
-            logging.warning(f"Unexpected keys: {unexpected_keys}")
+            logging.warning(f'Unexpected keys: {unexpected_keys}')
 
         model.to(self.device)
         return model.eval()
@@ -65,24 +65,23 @@ class CustomModel:
     def _results(self, probs: np.ndarray, threshold: float) -> list:
         all_labels = []
         for prob_vector in probs:
-            labels = [
-                self.labels[i]
-                for i, prob in enumerate(prob_vector)
-                if prob >= threshold
-            ]
+            labels = [self.labels[i] for i, prob in enumerate(prob_vector) if prob >= threshold]
             all_labels.append(labels)
         return all_labels
 
     def predict(self, images: list, threshold: float, batch_size: int) -> list:
-        logging.info("Starting image prediction.")
+        logging.info('Starting image prediction.')
         start_time = time.time()
         all_results = []
 
         for i in range(0, len(images), batch_size):
-            batch = images[i:i + batch_size]
-            logging.info(f"Processing batch {i // batch_size + 1} of {((len(images) - 1) // batch_size) + 1} " f"({len(batch)} image(s))")
+            batch = images[i : i + batch_size]
+            logging.info(
+                f'Processing batch {i // batch_size + 1} of {((len(images) - 1) // batch_size) + 1} '
+                f'({len(batch)} image(s))'
+            )
 
-            inputs = self.processor(images=batch, return_tensors="pt")
+            inputs = self.processor(images=batch, return_tensors='pt')
             inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
             with torch.no_grad():
@@ -93,29 +92,30 @@ class CustomModel:
             batch_results = self._results(probs, threshold)
             all_results.extend(batch_results)
 
-        total_runtime("predict", start_time)
+        total_runtime('predict', start_time)
         return all_results
-
 
 
 async def main():
     BASE_DIR = Path(__file__).resolve().parents[2]
-    CLIENT_PREVIEW = BASE_DIR / "json" / "client_preview.json"
-    TRAINED_LABEL = BASE_DIR / "json" / "trained_label.json"
-    MODEL_PATH = BASE_DIR / "models" / "SIGLIP_custom_model.pth"
-    SAVED_JSON = BASE_DIR / "json" / "prediction_result.json"
+    CLIENT_PREVIEW = BASE_DIR / 'json' / 'client_preview.json'
+    TRAINED_LABEL = BASE_DIR / 'json' / 'trained_label.json'
+    MODEL_PATH = BASE_DIR / 'models' / 'SIGLIP_custom_model.pth'
+    SAVED_JSON = BASE_DIR / 'json' / 'prediction_result.json'
 
     model = CustomModel(model_path=MODEL_PATH, label_path=TRAINED_LABEL)
     processor = ImageProcessor()
 
     cp = load_json(filepath=CLIENT_PREVIEW)
-    image_path = [BASE_DIR / Path(p) for p in cp["paths"]]
+    image_path = [BASE_DIR / Path(p) for p in cp['paths']]
     images = processor.resize(image_path)
     results = model.predict(images=images, threshold=0.4, batch_size=10)
 
     loaded_label = load_json(filepath=TRAINED_LABEL)
     loaded_label = list(loaded_label.values())
-    formatter = ResponseFormatter(prediction=results, client_preview=image_path, labels=loaded_label)
+    formatter = ResponseFormatter(
+        prediction=results, client_preview=image_path, labels=loaded_label
+    )
     formatted_json = json.loads(formatter.format())
     save_json(destination=SAVED_JSON, data=formatted_json)
 
@@ -126,7 +126,8 @@ async def main():
             for entry in formatted_json:
                 await db.insert(ClientPreview, entry)
         except Exception as e:
-            logging.error(f"Failed to insert record: {e}")
+            logging.error(f'Failed to insert record: {e}')
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     asyncio.run(main())

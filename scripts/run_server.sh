@@ -7,14 +7,15 @@ show_help() {
   echo "--development    Run the server on localhost using .env.development"
   echo "--staging        Run the server on staging IP using .env.staging"
   echo "--production     Run the server on production IP using .env.production"
-  echo "--port           (Optional) Override default port (default: 14000)"
+  echo "--port           (Optional) Override default port (default: APPLICATION_PORT from .env)"
   echo "--help           Show this help message"
 }
 
 # Default values
 ENV_FILE=""
 RELOAD_FLAG=""
-PORT="14000"
+CUSTOM_PORT=""
+PORT=""
 
 # Parse first argument (environment)
 case "$1" in
@@ -43,11 +44,9 @@ case "$1" in
 esac
 
 # Parse optional second argument for port
-# Check if second arg is --port
 if [ "$2" = "--port" ]; then
-  # Validate port is numeric and non-empty
   if echo "$3" | grep -qE '^[0-9]+$'; then
-    PORT="$3"
+    CUSTOM_PORT="$3"
   else
     echo "Error: Invalid port number '$3'. Must be numeric."
     show_help
@@ -65,6 +64,16 @@ export $(grep -v '^#' $ENV_FILE | xargs)
 # Set HOST from IP_HOST in .env file (default to 127.0.0.1)
 HOST=${IP_HOST:-"127.0.0.1"}
 
+# Set PORT from environment or custom override
+if [ -n "$CUSTOM_PORT" ]; then
+  PORT="$CUSTOM_PORT"
+else
+  if [ -z "$APPLICATION_PORT" ]; then
+    echo "Error: APPLICATION_PORT not set in $ENV_FILE"
+    exit 1
+  fi
+  PORT="$APPLICATION_PORT"
+fi
 
 # Checking OS Environment
 echo "Checking OS Environment"
