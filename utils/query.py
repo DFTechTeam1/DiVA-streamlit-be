@@ -1,7 +1,7 @@
 from utils.logger import logging
 from typing import Literal, Any, Union
 from sqlmodel import SQLModel
-from sqlalchemy import select, insert, update, delete, and_, or_
+from sqlalchemy import select, insert, update, delete, and_, or_, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.error.custom_error import DatabaseQueryError, DataNotFoundError
 
@@ -132,3 +132,15 @@ class QueryDatabase:
             )
             await self._session.rollback()
             raise DatabaseQueryError(detail="Database query error.")
+
+
+    async def truncate(self, table: type[SQLModel]) -> None:
+        try:
+            table_name = table.__tablename__
+            await self._session.execute(text(f"TRUNCATE TABLE {table_name} RESTART IDENTITY CASCADE"))
+            await self._session.commit()
+            logging.info(f"Successfully truncated table {table_name}.")
+        except Exception as e:
+            logging.error(f"Failed to truncate table {table_name}: {e}")
+            await self._session.rollback()
+            raise DatabaseQueryError(detail="Database truncate error.")

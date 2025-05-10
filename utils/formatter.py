@@ -27,14 +27,12 @@ class ResponseFormatter:
                 logging.warning(f"Image path {path} does not exist. Skipping.")
                 self.empty_count += 1
                 continue
-
+            
+            filename = os.path.basename(path)
             mapped_label = {label: (label in pred) for label in self.labels}
-            self.result.append(
-                {
-                    "filepath": str(path),
-                    "prediction": mapped_label,
-                }
-            )
+            mapped_label["filename"] = filename
+            mapped_label["filepath"] = str(path)
+            self.result.append(mapped_label)
             self.filled_count += 1
 
         logging.info(f"Filled predictions: {self.filled_count}")

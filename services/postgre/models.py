@@ -27,10 +27,6 @@ class ClientPreview(SQLModel, table=True):
     cool: bool = Field(default=False)
     neutral: bool = Field(default=False)
     gold: bool = Field(default=False)
-    is_validated: bool = Field(default=False)
-    is_trained: bool = Field(default=False)
-    ip_address: str = Field(default=None)
-
 
 async def database_migration():
     engine = database_connection()

@@ -1,8 +1,8 @@
-import os
 import sys
 import json
 import time
 import torch
+import asyncio
 import numpy as np
 from pathlib import Path
 
@@ -11,7 +11,10 @@ from utils.logger import logging
 from utils.helper import load_json, save_json, total_runtime
 from utils.processor import ImageProcessor
 from utils.formatter import ResponseFormatter
+from utils.query import QueryDatabase
 from collections import OrderedDict
+from services.postgre.connection import get_db
+from services.postgre.models import ClientPreview
 from transformers import (
     AutoConfig,
     AutoImageProcessor,
@@ -95,24 +98,35 @@ class CustomModel:
 
 
 
+async def main():
+    BASE_DIR = Path(__file__).resolve().parents[2]
+    CLIENT_PREVIEW = BASE_DIR / "json" / "client_preview.json"
+    TRAINED_LABEL = BASE_DIR / "json" / "trained_label.json"
+    MODEL_PATH = BASE_DIR / "models" / "SIGLIP_custom_model.pth"
+    SAVED_JSON = BASE_DIR / "json" / "prediction_result.json"
 
+    model = CustomModel(model_path=MODEL_PATH, label_path=TRAINED_LABEL)
+    processor = ImageProcessor()
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-CLIENT_PREVIEW = BASE_DIR / "json" / "client_preview.json"
-TRAINED_LABEL = BASE_DIR / "json" / "trained_label.json"
-MODEL_PATH = BASE_DIR / "models" / "SIGLIP_custom_model.pth"
-SAVED_JSON = BASE_DIR / "json" / "prediction_result.json"
+    cp = load_json(filepath=CLIENT_PREVIEW)
+    image_path = [BASE_DIR / Path(p) for p in cp["paths"]]
+    images = processor.resize(image_path)
+    results = model.predict(images=images, threshold=0.4, batch_size=10)
 
-model = CustomModel(model_path=MODEL_PATH, label_path=TRAINED_LABEL)
-processor = ImageProcessor()
+    loaded_label = load_json(filepath=TRAINED_LABEL)
+    loaded_label = list(loaded_label.values())
+    formatter = ResponseFormatter(prediction=results, client_preview=image_path, labels=loaded_label)
+    formatted_json = json.loads(formatter.format())
+    save_json(destination=SAVED_JSON, data=formatted_json)
 
-cp = load_json(filepath=CLIENT_PREVIEW)
-image_path = [BASE_DIR / Path(p) for p in cp["paths"]]
-images = processor.resize(image_path)
-results = model.predict(images=images, threshold=0.4, batch_size=10)
+    async for session in get_db():
+        db = QueryDatabase(session=session)
+        try:
+            await db.truncate(ClientPreview)
+            for entry in formatted_json:
+                await db.insert(ClientPreview, entry)
+        except Exception as e:
+            logging.error(f"Failed to insert record: {e}")
 
-loaded_label = load_json(filepath=TRAINED_LABEL)
-loaded_label = list(loaded_label.values())
-formatter = ResponseFormatter(prediction=results, client_preview=image_path, labels=loaded_label)
-formatted_json = json.loads(formatter.format())
-save_json(destination=SAVED_JSON, data=formatted_json)
+if __name__ == "__main__":
+    asyncio.run(main())
