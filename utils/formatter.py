@@ -1,55 +1,43 @@
-import urllib.parse
+import os
+import json
+from typing import Optional
 from utils.logger import logging
-from collections import OrderedDict
-from typing import Literal, Union
 
 
-class CustomFormatter:
-    def format_cls_label(
-        self, data: Union[dict, list], target_type: Literal["dict", "list"]
-    ) -> Union[list, dict]:
-        logging.info("Formatting cls prediction.")
-        if isinstance(data, dict):
-            if target_type == "dict":
-                return {label: True for label, score in data.items()}
-            else:
-                return list(data.values())
-        else:
-            if target_type == "dict":
-                return {entry: True for entry in data}
-            else:
-                raise ValueError("Feature not implemented!")
+class ResponseFormatter:
+    def __init__(self, prediction: list, client_preview: list, labels: list):
+        self.empty_count: int = 0
+        self.filled_count: int = 0
+        self.result: list = []
+        self.prediction = prediction
+        self.client_preview = client_preview
+        self.labels = labels
 
-    def format_prefix_path(self, filtered_image: list, prefix_path: str) -> list:
-        logging.info("Formatting prefix path.")
-        return [prefix_path + entry["filepath"] for entry in filtered_image]
+    def format(self) -> Optional[dict]:
+        if len(self.prediction) != len(self.client_preview):
+            raise ValueError("Prediction and client preview lengths should be matched.")
 
-    def format_cls_model_architecture(self, state_dict: dict) -> dict:
-        logging.info("Formating model architecture.")
-        formatted_state = OrderedDict()
-        for key, value in state_dict.items():
-            new_key = key.replace("module.", "")
-            formatted_state[new_key] = value
-        return formatted_state
+        for path, pred in zip(self.client_preview, self.prediction):
+            if not pred:
+                logging.warning(f"Prediction for {path} is empty. Skipping.")
+                self.empty_count += 1
+                continue
 
-    def format_trained_cls_label(self, label: dict) -> dict:
-        logging.info("Formatting trained label.")
-        return {int(key): value for key, value in label.items()}
+            if not os.path.exists(path):
+                logging.warning(f"Image path {path} does not exist. Skipping.")
+                self.empty_count += 1
+                continue
 
-    def format_clip_output(
-        self, actual_path: list, clip_result: list, base_url: str
-    ) -> list:
-        formatted_results = []
-
-        for entry in clip_result:
-            image_path = actual_path[entry["corpus_id"]]
-            encoded_path = urllib.parse.quote(image_path, safe="")
-            formatted_results.append(
+            mapped_label = {label: (label in pred) for label in self.labels}
+            self.result.append(
                 {
-                    "filepath": image_path,
-                    "accuracy": round(entry["score"], 2),
-                    "stream_image": f"{base_url}/query/stream-image?image_path={encoded_path}",
+                    "filepath": str(path),
+                    "prediction": mapped_label,
                 }
             )
+            self.filled_count += 1
 
-        return formatted_results
+        logging.info(f"Filled predictions: {self.filled_count}")
+        logging.info(f"Empty predictions: {self.empty_count}")
+
+        return json.dumps(self.result, indent=4) if self.result else None

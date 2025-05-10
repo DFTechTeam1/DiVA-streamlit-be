@@ -1,7 +1,7 @@
 from datetime import datetime
 from utils.helper import local_time
 from sqlmodel import SQLModel, Field
-from services.postgres.connection import database_connection
+from services.postgre.connection import database_connection
 
 
 class ClientPreview(SQLModel, table=True):

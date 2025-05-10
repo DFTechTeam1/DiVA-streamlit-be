@@ -167,3 +167,5 @@ mount/*
 temp/*
 *.lock
 json/client*.json
+json/prediction*.json
+.*backup

@@ -1,11 +1,10 @@
-import json
 from pathlib import Path
 from typing import Optional
 from src.schema.nas_params import ListShareNasParams
-from utils.logger import logging
 from services.nas.integration import NasIntegration
 from services.nas.decorator import require_login
-from utils.helper import local_time
+from utils.helper import local_time, save_json
+from utils.logger import logging
 
 
 class NasFolderService:
@@ -38,10 +37,7 @@ class NasFolderService:
         ip_directory = project_root / "temp" / self.nas.ip_address
         ip_directory.mkdir(parents=True, exist_ok=True)
         file_path = ip_directory / f"{local_time()}.json"
-        with open(file_path, "w") as file:
-            json.dump(formatted_response, file, indent=4)
-
-        logging.info(f"Shared folder data saved in {file_path}.")
+        save_json(destination=str(file_path), data=formatted_response)
         return None
 
     @require_login

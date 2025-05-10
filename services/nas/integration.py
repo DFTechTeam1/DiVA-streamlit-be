@@ -29,7 +29,7 @@ class NasIntegration:
             logging.info(f"Using SID: {sid[:10]}")
             params["_sid"] = sid
 
-        async with httpx.AsyncClient(timeout=10) as client:
+        async with httpx.AsyncClient(timeout=20) as client:
             try:
                 response = await client.request(method, url, params=params)
                 response.raise_for_status()

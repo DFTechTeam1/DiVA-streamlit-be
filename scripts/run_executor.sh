@@ -1,18 +1,27 @@
 #!/bin/bash
 
 show_help() {
-    echo "Usage: sh scripts/run_extractor.sh"
+    echo "Usage: sh scripts/run_executor.sh [ --fullpath ] | [ --help ]"
     echo ""
-    echo "Options:"
-    echo "  --help  Show this help message"
+    echo "--help  Show this help message"
+    echo "--fullpath  Run the executor with full path"
+    echo ""
+    echo "Example: sh scripts/run_executor.sh /home/dfactory/Project/DiVA-streamlit-be/services/custom_model/siglip.py"
 }
+
+TARGET_SCRIPT="$1"
+PROJECT_DIR="/home/$USER/Project/DiVA-streamlit-be"
 
 if [ "$1" = "--help" ]; then
     show_help
     exit 0
 fi
 
-PROJECT_DIR="/home/dfactory/Project/DiVA-streamlit-be"
+if [ ! -f "$TARGET_SCRIPT" ]; then
+    echo "Error: The specified file does not exist: $TARGET_SCRIPT"
+    exit 1
+fi
+
 
 # Checking OS Environment
 echo "Checking OS Environment."
@@ -37,8 +46,8 @@ else
 fi
 echo "Virtual environment activated."
 
-echo "Running NAS extractor."
-python3 $PROJECT_DIR/services/nas/executor.py
+echo "Running script: $TARGET_SCRIPT."
+python3 $TARGET_SCRIPT
 
 if [ $? -ne 0 ]; then
     echo "Error: Failed to run executor.py"

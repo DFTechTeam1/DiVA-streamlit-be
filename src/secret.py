@@ -1,8 +1,8 @@
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
+PROJECT_DIR = Path(__file__).resolve().parents[1]
 
 env_file = os.getenv("ENV_FILE", os.path.join(PROJECT_DIR, "env", ".env.development"))
 
@@ -27,5 +27,4 @@ DIVA_PG_SQL_DATABASE = os.getenv("DIVA_PG_SQL_DATABASE")
 DIVA_PG_SQL_HOST = os.getenv("DIVA_PG_SQL_HOST")
 MIDDLEWARE_SECRET_KEY = os.getenv("MIDDLEWARE_SECRET_KEY")
 IP_HOST = os.getenv("IP_HOST")
-APPLICATION_PORT = os.getenv("APPLICATION_PORT")
 POSTGRES_URL = f"postgresql+asyncpg://{DIVA_PG_SQL_USER}:{DIVA_PG_SQL_PASSWORD}@{DIVA_PG_SQL_HOST}:{DIVA_PG_SQL_PORT}/{DIVA_PG_SQL_DATABASE}"
