@@ -13,7 +13,7 @@ class ResponseFormatter:
         self.client_preview = client_preview
         self.labels = labels
 
-    def format(self) -> Optional[dict]:
+    def format_cls_pred(self) -> Optional[dict]:
         if len(self.prediction) != len(self.client_preview):
             raise ValueError('Prediction and client preview lengths should be matched.')
 

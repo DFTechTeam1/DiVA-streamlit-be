@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.secret import MIDDLEWARE_SECRET_KEY
-from src.routers import health_check
+from src.routers import health_check, query, stream
 from services.postgre.models import database_migration
 from services.postgre.connection import database_connection
 from starlette.middleware.sessions import SessionMiddleware
@@ -37,3 +37,5 @@ app.add_middleware(
 
 app.add_middleware(middleware_class=SessionMiddleware, secret_key=MIDDLEWARE_SECRET_KEY)
 app.include_router(health_check.router)
+app.include_router(query.router)
+app.include_router(stream.router)

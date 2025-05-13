@@ -2,8 +2,10 @@ import json
 import time
 from pathlib import Path
 from pytz import timezone
+from urllib.parse import quote
 from datetime import datetime
 from utils.logger import logging
+from typing import Optional
 
 
 def local_time(zone: str = 'Asia/Jakarta') -> datetime:
@@ -26,6 +28,21 @@ def save_json(destination: str, data: dict) -> None:
 
 
 def total_runtime(function_name: str, finished_time: float) -> None:
-    elapsed = time.time() - finished_time
+    elapsed = abs(time.time() - finished_time)
     logging.info(f'Total {function_name} completed in {elapsed:.2f}s.')
     return
+
+
+def extract_path(entries: list) -> Optional[list]:
+    return [entry['filepath'] for entry in entries if 'filepath' in entry]
+
+
+def format_clip_pred(result: list, fullpath: list, base_path: str) -> list:
+    return [
+        {
+            'path': fullpath[entry['corpus_id']], 
+            'score': entry['score'],
+            'image_stream': f"{base_path}{quote(fullpath[entry['corpus_id']])}"
+        } 
+        for entry in result
+    ]

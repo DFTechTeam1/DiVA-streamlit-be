@@ -95,28 +95,32 @@ class CustomModel:
         total_runtime('predict', start_time)
         return all_results
 
+    def to_dict(self, prediction: list) -> dict:
+        return {entry: True for entry in prediction}
+
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+CLIENT_PREVIEW = BASE_DIR / 'json' / 'client_preview.json'
+TRAINED_LABEL = BASE_DIR / 'json' / 'trained_label.json'
+MODEL_PATH = BASE_DIR / 'models' / 'SIGLIP_custom_model.pth'
+SAVED_JSON = BASE_DIR / 'json' / 'prediction_result.json'
+
+cls_model = CustomModel(model_path=MODEL_PATH, label_path=TRAINED_LABEL)
+
 
 async def main():
-    BASE_DIR = Path(__file__).resolve().parents[2]
-    CLIENT_PREVIEW = BASE_DIR / 'json' / 'client_preview.json'
-    TRAINED_LABEL = BASE_DIR / 'json' / 'trained_label.json'
-    MODEL_PATH = BASE_DIR / 'models' / 'SIGLIP_custom_model.pth'
-    SAVED_JSON = BASE_DIR / 'json' / 'prediction_result.json'
-
-    model = CustomModel(model_path=MODEL_PATH, label_path=TRAINED_LABEL)
     processor = ImageProcessor()
-
     cp = load_json(filepath=CLIENT_PREVIEW)
     image_path = [BASE_DIR / Path(p) for p in cp['paths']]
     images = processor.resize(image_path)
-    results = model.predict(images=images, threshold=0.4, batch_size=10)
+    results = cls_model.predict(images=images, threshold=0.4, batch_size=10)
 
     loaded_label = load_json(filepath=TRAINED_LABEL)
     loaded_label = list(loaded_label.values())
     formatter = ResponseFormatter(
         prediction=results, client_preview=image_path, labels=loaded_label
     )
-    formatted_json = json.loads(formatter.format())
+    formatted_json = json.loads(formatter.format_cls_pred())
     save_json(destination=SAVED_JSON, data=formatted_json)
 
     async for session in get_db():

@@ -8,14 +8,8 @@ class ResponseDefault(BaseModel):
     data: Optional[dict] = None
 
 
-class Pagination(BaseModel):
-    prediction_label: Optional[dict] = None
-    similar_image: list = None
-    total_page: Optional[int] = Field(
-        default=None, ge=1, description='Total page available based on query database..'
-    )
-    total_image: Optional[int] = Field(
-        default=None,
-        ge=1,
-        description='Total similar image for uploaded data based on query database.',
-    )
+class ResponsePage(BaseModel):
+    predictions: Optional[list] = None
+    similar_images: Optional[list] = None
+    total_page: Optional[int] = Field(default=None, ge=1, le=100)
+    total_image: Optional[int] = Field(default=None, ge=1, le=10000)
