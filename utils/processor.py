@@ -12,6 +12,11 @@ class ImageProcessor:
     def __init__(self, width: int = 255, height: int = 255):
         self.width = width
         self.height = height
+        self.root_path = 'temp'
+        self.sub_dir = 'saved_images'
+        self.encoded_dir = 'encoded'
+        self.decoded_dir = 'decoded'
+        self.new_image = 'new_image'
 
     def resize(self, paths: Union[str, list]) -> Optional[list]:
         start_time = time.time()
@@ -32,17 +37,46 @@ class ImageProcessor:
         return processed
 
     def encode(self, image_path: str) -> str:
-        with open(image_path, 'rb') as image_file:
-            return base64.b64encode(image_file.read())
+        save_dir = os.path.join(self.root_path, self.sub_dir, self.encoded_dir)
+        os.makedirs(save_dir, exist_ok=True)
 
-    def decode(self, encoded_data: str) -> str:
-        root_path = 'temp'
-        sub_dir = 'saved_images'
+        images = self.resize(image_path)
+        if not images:
+            raise ValueError(f'Image not found or failed to resize: {image_path}')
 
-        full_path = os.path.join(root_path, sub_dir)
-        os.makedirs(full_path, exist_ok=True)
-        image = Image.open(BytesIO(base64.b64decode(encoded_data))).convert('RGB')
-        filepath = f'{full_path}/{local_time().strftime("%Y%m%d%H%M")}.jpeg'
+        resized_img = images[0]
+        filename = f'{local_time().strftime("%Y%m%d%H%M")}.jpeg'
+        filepath = os.path.join(save_dir, filename)
+        resized_img.save(filepath, 'JPEG')
+
+        with open(filepath, 'rb') as image_file:
+            encoded = base64.b64encode(image_file.read()).decode('utf-8')
+        logging.info(f'Encoded image saved to: {filepath}')
+        return encoded
+
+    def decode(self, encoded_data: str) -> Image:
+        save_dir = os.path.join(self.root_path, self.sub_dir, self.decoded_dir)
+        os.makedirs(save_dir, exist_ok=True)
+
+        image = (
+            Image.open(BytesIO(base64.b64decode(encoded_data)))
+            .convert('RGB')
+            .resize((self.width, self.height))
+        )
+        filename = f'{local_time().strftime("%Y%m%d%H%M")}.jpeg'
+        filepath = os.path.join(save_dir, filename)
         image.save(filepath, 'JPEG')
 
-        return filepath
+        logging.info(f'Decoded image saved to: {filepath}')
+        return image
+
+    def save_image(self, encoded_data: str, filename: str) -> None:
+        save_dir = os.path.join(self.root_path, self.sub_dir, self.new_image)
+        os.makedirs(save_dir, exist_ok=True)
+
+        image = Image.open(BytesIO(base64.b64decode(encoded_data))).convert('RGB')
+        filepath = os.path.join(save_dir, filename)
+
+        image.save(filepath, 'JPEG')
+        logging.info(f'Decoded image saved to: {filepath}')
+        return None

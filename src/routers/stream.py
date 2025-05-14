@@ -7,6 +7,7 @@ router = APIRouter(tags=['Query'], prefix='/query')
 
 CHUNK_SIZE = 16 * 256
 
+
 async def stream(image_path: str):
     async def file_iterator():
         try:

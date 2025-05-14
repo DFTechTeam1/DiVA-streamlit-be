@@ -40,9 +40,9 @@ def extract_path(entries: list) -> Optional[list]:
 def format_clip_pred(result: list, fullpath: list, base_path: str) -> list:
     return [
         {
-            'path': fullpath[entry['corpus_id']], 
-            'score': entry['score'],
-            'image_stream': f"{base_path}{quote(fullpath[entry['corpus_id']])}"
-        } 
+            'path': fullpath[entry['corpus_id']],
+            'score': round(entry['score'], 2),
+            'image_stream': f'{base_path}{quote(fullpath[entry["corpus_id"]])}',
+        }
         for entry in result
     ]

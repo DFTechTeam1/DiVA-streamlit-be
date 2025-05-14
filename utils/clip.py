@@ -1,10 +1,6 @@
 import torch
 import time
-from typing import Union
-from PIL import Image
-from torch import Tensor
 from utils.helper import total_runtime
-from utils.logger import logging
 from sentence_transformers import SentenceTransformer, util
 
 
@@ -19,7 +15,9 @@ class CLIP:
 
     def encode(self, image: list, batch_size: int):
         start_time = time.time()
-        embeddings = self.model.encode(image, batch_size=batch_size, convert_to_tensor=True, show_progress_bar=True)
+        embeddings = self.model.encode(
+            image, batch_size=batch_size, convert_to_tensor=True, show_progress_bar=True
+        )
         total_runtime('encoding', start_time)
         return embeddings
 
