@@ -12,8 +12,7 @@ class ImageProcessor:
     def __init__(self, width: int = 255, height: int = 255):
         self.width = width
         self.height = height
-        self.root_path = 'temp'
-        self.sub_dir = 'saved_images'
+        self.root_path = 'saved_images'
         self.encoded_dir = 'encoded'
         self.decoded_dir = 'decoded'
         self.new_image = 'new_image'
@@ -37,7 +36,7 @@ class ImageProcessor:
         return processed
 
     def encode(self, image_path: str) -> str:
-        save_dir = os.path.join(self.root_path, self.sub_dir, self.encoded_dir)
+        save_dir = os.path.join(self.root_path, self.encoded_dir)
         os.makedirs(save_dir, exist_ok=True)
 
         images = self.resize(image_path)
@@ -55,7 +54,7 @@ class ImageProcessor:
         return encoded
 
     def decode(self, encoded_data: str) -> Image:
-        save_dir = os.path.join(self.root_path, self.sub_dir, self.decoded_dir)
+        save_dir = os.path.join(self.root_path, self.decoded_dir)
         os.makedirs(save_dir, exist_ok=True)
 
         image = (
@@ -71,7 +70,7 @@ class ImageProcessor:
         return image
 
     def save_image(self, encoded_data: str, filename: str) -> None:
-        save_dir = os.path.join(self.root_path, self.sub_dir, self.new_image)
+        save_dir = os.path.join(self.root_path, self.new_image)
         os.makedirs(save_dir, exist_ok=True)
 
         image = Image.open(BytesIO(base64.b64decode(encoded_data))).convert('RGB')

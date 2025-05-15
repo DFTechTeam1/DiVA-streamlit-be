@@ -9,8 +9,9 @@ show_help() {
 }
 
 MOUNT_DIR="mount"
-ENV_FILE="env/.env.development"
-TEMP_DIR="temp"
+PROJECT_DIR="$HOME/Project/DiVA-streamlit-be"
+ENV_FILE="$PROJECT_DIR/env/.env.development"
+TEMP_DIR="$PROJECT_DIR/temp"
 
 # Check if the environment file exists
 if [ ! -f "$ENV_FILE" ]; then

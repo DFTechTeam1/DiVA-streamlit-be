@@ -9,25 +9,24 @@ show_help() {
     echo "--path           Run the executor with full path"
     echo "--help           Show this help message"
     echo ""
-    echo "Example:"
-    echo "  sh scripts/run_executor.sh --path /home/dfactory/Project/DiVA-streamlit-be/services/custom_model/siglip.py --development"
+    echo "Example: sh scripts/run_executor.sh --path /home/dfactory/Project/DiVA-streamlit-be/services/custom_model/siglip.py --development"
 }
 
-PROJECT_DIR="/home/$USER/Project/DiVA-streamlit-be"
+PROJECT_DIR="$HOME/Project/DiVA-streamlit-be"
 ENV_FILE=""
 
 case "$3" in
   --development)
     echo "Using development environment configuration"
-    ENV_FILE="env/.env.development"
+    ENV_FILE="$PROJECT_DIR/env/.env.development"
     ;;
   --staging)
     echo "Using staging environment configuration"
-    ENV_FILE="env/.env.staging"
+    ENV_FILE="$PROJECT_DIR/env/.env.staging"
     ;;
   --production)
     echo "Using production environment configuration"
-    ENV_FILE="env/.env.production"
+    ENV_FILE="$PROJECT_DIR/env/.env.production"
     ;;
   --help)
     show_help
@@ -40,6 +39,7 @@ case "$3" in
     exit 1
     ;;
 esac
+
 
 # Parse arguments
 if [ "$1" = "--help" ]; then

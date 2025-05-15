@@ -169,3 +169,4 @@ temp/*
 json/client*.json
 json/prediction*.json
 .*backup
+saved_images/
