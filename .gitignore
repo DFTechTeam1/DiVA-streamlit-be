@@ -162,8 +162,11 @@ cython_debug/
 #.idea/
 
 #utils
-notebooks/*
 models/*
 mount/*
 temp/*
-sample/*
+*.lock
+json/client*.json
+json/prediction*.json
+.*backup
+saved_images/

@@ -1,15 +1,13 @@
 from datetime import datetime
-from utils.helper import CustomHelper
+from utils.helper import local_time
 from sqlmodel import SQLModel, Field
-from services.postgres.connection import database_connection
-
-helper = CustomHelper()
+from services.postgre.connection import database_connection
 
 
 class ClientPreview(SQLModel, table=True):
-    __tablename__ = "client_preview"
+    __tablename__ = 'client_preview'
     id: int = Field(primary_key=True)
-    created_at: datetime = Field(default=helper.local_time())
+    created_at: datetime = Field(default=local_time())
     updated_at: datetime = Field(default=None, nullable=True)
     filepath: str = Field(default=None)
     filename: str = Field(default=None)
@@ -29,9 +27,6 @@ class ClientPreview(SQLModel, table=True):
     cool: bool = Field(default=False)
     neutral: bool = Field(default=False)
     gold: bool = Field(default=False)
-    is_validated: bool = Field(default=False)
-    is_trained: bool = Field(default=False)
-    ip_address: str = Field(default=None)
 
 
 async def database_migration():

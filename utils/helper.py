@@ -1,54 +1,48 @@
-import os
-import io
-from PIL import Image
+import json
+import time
 from pathlib import Path
+from pytz import timezone
+from urllib.parse import quote
+from datetime import datetime
 from utils.logger import logging
 from typing import Optional
-from pytz import timezone
-from datetime import datetime
-from fastapi.responses import StreamingResponse
-from utils.error.custom_error import DataNotFoundError
 
 
-class CustomHelper:
-    def local_time(self, zone: str = "Asia/Jakarta") -> datetime:
-        return datetime.now(timezone(zone)).replace(tzinfo=None)
+def local_time(zone: str = 'Asia/Jakarta') -> datetime:
+    return datetime.now(timezone(zone)).replace(tzinfo=None)
 
-    def find_image(self, directory: str) -> Optional[list]:
-        if not os.path.exists(path=directory):
-            logging.error(f"Directory {directory} not exist!")
-            raise FileNotFoundError("Cannot find image into non-existing directory.")
 
-        image_extensions = {".jpg", ".jpeg", ".png"}
-        images = [
-            str(path)
-            for path in Path(directory).rglob("*")
-            if path.suffix.lower() in image_extensions
-        ]
+def load_json(filepath: str) -> dict:
+    logging.info(f'Loading JSON data from {filepath}.')
+    return json.loads(Path(filepath).read_text())
 
-        if not images:
-            logging.error(f"No image data found in directory {directory}.")
-            return None
 
-        logging.info(f"Loaded {len(images)} images from {directory}.")
-        return images
+def save_json(destination: str, data: dict) -> None:
+    logging.info(f'Data saved to {destination}.')
+    file = open(destination, 'w')
+    try:
+        json.dump(data, file, indent=4)
+    finally:
+        file.close()
+    return
 
-    def stream_image(self, file_path: str) -> StreamingResponse:
-        if not os.path.exists(file_path):
-            logging.error(f"Image file {file_path} does not exist!")
-            raise DataNotFoundError(detail=f"Image file {file_path} not found.")
 
-        try:
-            with Image.open(file_path) as img:
-                img_format = img.format
-                img_buffer = io.BytesIO()
-                img.save(img_buffer, format=img_format)
-                img_buffer.seek(0)
+def total_runtime(function_name: str, finished_time: float) -> None:
+    elapsed = abs(time.time() - finished_time)
+    logging.info(f'Total {function_name} completed in {elapsed:.2f}s.')
+    return
 
-            return StreamingResponse(
-                img_buffer, media_type=f"image/{img_format.lower()}"
-            )
 
-        except Exception as e:
-            logging.error(f"Error while processing image {file_path}: {e}")
-            raise DataNotFoundError(detail=f"Error processing image {file_path}.")
+def extract_path(entries: list) -> Optional[list]:
+    return [entry['filepath'] for entry in entries if 'filepath' in entry]
+
+
+def format_clip_pred(result: list, fullpath: list, base_path: str) -> list:
+    return [
+        {
+            'path': fullpath[entry['corpus_id']],
+            'score': round(entry['score'], 2),
+            'image_stream': f'{base_path}{quote(fullpath[entry["corpus_id"]])}',
+        }
+        for entry in result
+    ]

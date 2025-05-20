@@ -2,62 +2,89 @@
 
 # Show usage information
 show_help() {
-  echo "Usage: sh scripts/run_server.sh [ --development | --staging | --production | --help ]"
+  echo "Usage: sh scripts/run_server.sh [ --env <environment> ] | [ --port <number> ] [ --help]"
   echo ""
-  echo "--development    Run the server on localhost and load the .env.development file"
-  echo "--staging        Run the server on the staging IP and load the .env.staging file"
-  echo "--production     Run the server on the production IP address and load the .env.production file"
-  echo "--help           Show this help message"
+  echo "--env       Set environment: development | staging | production"
+  echo "--port      Override default port (default: APPLICATION_PORT from .env)"
+  echo "--help, -h  Show this help message"
+  echo "Example: sh scripts/server.sh --env development --port 24000"
+  exit 0
 }
 
-# Ensure argument is provided
-if [ -z "$1" ]; then
-  echo "Error: No environment specified. Please provide one of --development, --staging, or --production."
-  show_help
-  exit 1
-fi
-
+# Default values
+ENV=""
 ENV_FILE=""
-DEFAULT_PORT="14000"
+RELOAD_FLAG=""
+PORT=""
+CUSTOM_PORT=""
 
 # Parse arguments
-case "$1" in
-  --development)
-    echo "Using development environment configuration"
-    export ENV_FILE="env/.env.development"
-    RELOAD_FLAG="--reload --reload-dir=src"
-    ;;
-  --staging)
-    echo "Using staging environment configuration"
-    export ENV_FILE="env/.env.staging"
-    RELOAD_FLAG=""
-    ;;
-  --production)
-    echo "Using production environment configuration"
-    export ENV_FILE="env/.env.production"
-    RELOAD_FLAG=""
-    ;;
-  --help)
-    show_help
-    exit 0
-    ;;
-  *)
-    echo "Invalid option: $1"
-    show_help
-    exit 1
-    ;;
-esac
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --env)
+      shift
+      ENV="$1"
+      case "$ENV" in
+        development)
+          echo "Using development environment configuration"
+          ENV_FILE="env/.env.development"
+          RELOAD_FLAG="--reload --reload-dir=src"
+          ;;
+        staging)
+          echo "Using staging environment configuration"
+          ENV_FILE="env/.env.staging"
+          ;;
+        production)
+          echo "Using production environment configuration"
+          ENV_FILE="env/.env.production"
+          ;;
+        *)
+          echo "Error: Invalid environment '$ENV'"
+          show_help
+          ;;
+      esac
+      ;;
+    --port)
+      shift
+      if echo "$1" | grep -qE '^[0-9]+$'; then
+        CUSTOM_PORT="$1"
+      else
+        echo "Error: Invalid port number '$1'. Must be numeric."
+        show_help
+      fi
+      ;;
+    --help|-h)
+      show_help
+      ;;
+    *)
+      echo "Error: Unknown argument: $1"
+      show_help
+      ;;
+  esac
+  shift
+done
 
-# Load the environment variables
-export $(grep -v '^#' $ENV_FILE | xargs)
+# Validate env was provided
+if [ -z "$ENV_FILE" ]; then
+  echo "Error: Missing --env argument"
+  show_help
+fi
+
+# Load environment variables
+export $(grep -v '^#' "$ENV_FILE" | xargs)
 
 # Set HOST from IP_HOST in .env file (default to 127.0.0.1)
 HOST=${IP_HOST:-"127.0.0.1"}
 
-# Check if APPLICATION_PORT is set, otherwise use DEFAULT_PORT and log a message
-if [ -z "$APPLICATION_PORT" ]; then
-  echo "Warning: APPLICATION_PORT not provided in $ENV_FILE. Using default port $DEFAULT_PORT."
-  APPLICATION_PORT=$DEFAULT_PORT
+# Set PORT from environment or override
+if [ -n "$CUSTOM_PORT" ]; then
+  PORT="$CUSTOM_PORT"
+else
+  if [ -z "$APPLICATION_PORT" ]; then
+    echo "Error: APPLICATION_PORT not set in $ENV_FILE"
+    exit 1
+  fi
+  PORT="$APPLICATION_PORT"
 fi
 
 # Checking OS Environment
@@ -67,16 +94,12 @@ if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
   . .venv/bin/activate
 else
   case "$OSTYPE" in
-    linux*)
-      echo "Linux based OS detected"
+    linux*|darwin*)
+      echo "Unix-based OS detected"
       source .venv/bin/activate
       ;;
-    darwin*)
-      echo "macOS detected"
-      source .venv/bin/activate
-      ;;
-    cygwin* | msys* | mingw*)
-      echo "Windows based OS detected"
+    cygwin*|msys*|mingw*)
+      echo "Windows-based OS detected"
       source .venv/Scripts/activate
       ;;
     *)
@@ -86,6 +109,6 @@ else
   esac
 fi
 
-# Start the server with the resolved host and port
-echo "Running uvicorn server on $HOST:$APPLICATION_PORT"
-uvicorn src.main:app --host "$HOST" --port "$APPLICATION_PORT" $RELOAD_FLAG
+# Start the server
+echo "Running uvicorn server on $HOST:$PORT"
+uvicorn src.main:app --host "$HOST" --port "$PORT" $RELOAD_FLAG
