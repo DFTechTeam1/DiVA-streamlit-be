@@ -2,69 +2,84 @@
 
 # Show usage information
 show_help() {
-  echo "Usage: sh scripts/run_server.sh [ --development | --staging | --production ] [ --port <number> ]"
+  echo "Usage: sh scripts/run_server.sh --env <environment> [ --port <number> ]"
   echo ""
-  echo "--development    Run the server on localhost using .env.development"
-  echo "--staging        Run the server on staging IP using .env.staging"
-  echo "--production     Run the server on production IP using .env.production"
+  echo "--env            Set environment: development | staging | production"
   echo "--port           (Optional) Override default port (default: APPLICATION_PORT from .env)"
-  echo "--help           Show this help message"
+  echo "--help, -h       Show this help message"
 }
 
 # Default values
+ENV=""
 ENV_FILE=""
 RELOAD_FLAG=""
-CUSTOM_PORT=""
 PORT=""
+CUSTOM_PORT=""
 
-# Parse first argument (environment)
-case "$1" in
-  --development)
-    echo "Using development environment configuration"
-    ENV_FILE="env/.env.development"
-    RELOAD_FLAG="--reload --reload-dir=src"
-    ;;
-  --staging)
-    echo "Using staging environment configuration"
-    ENV_FILE="env/.env.staging"
-    ;;
-  --production)
-    echo "Using production environment configuration"
-    ENV_FILE="env/.env.production"
-    ;;
-  --help)
-    show_help
-    exit 0
-    ;;
-  *)
-    echo "Error: Invalid or missing environment option: $1"
-    show_help
-    exit 1
-    ;;
-esac
+# Parse arguments
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --env)
+      shift
+      ENV="$1"
+      case "$ENV" in
+        development)
+          echo "Using development environment configuration"
+          ENV_FILE="env/.env.development"
+          RELOAD_FLAG="--reload --reload-dir=src"
+          ;;
+        staging)
+          echo "Using staging environment configuration"
+          ENV_FILE="env/.env.staging"
+          ;;
+        production)
+          echo "Using production environment configuration"
+          ENV_FILE="env/.env.production"
+          ;;
+        *)
+          echo "Error: Invalid environment '$ENV'"
+          show_help
+          exit 1
+          ;;
+      esac
+      ;;
+    --port)
+      shift
+      if echo "$1" | grep -qE '^[0-9]+$'; then
+        CUSTOM_PORT="$1"
+      else
+        echo "Error: Invalid port number '$1'. Must be numeric."
+        show_help
+        exit 1
+      fi
+      ;;
+    --help|-h)
+      show_help
+      exit 0
+      ;;
+    *)
+      echo "Error: Unknown argument: $1"
+      show_help
+      exit 1
+      ;;
+  esac
+  shift
+done
 
-# Parse optional second argument for port
-if [ "$2" = "--port" ]; then
-  if echo "$3" | grep -qE '^[0-9]+$'; then
-    CUSTOM_PORT="$3"
-  else
-    echo "Error: Invalid port number '$3'. Must be numeric."
-    show_help
-    exit 1
-  fi
-elif [ -n "$2" ]; then
-  echo "Error: Invalid argument: $2"
+# Validate env was provided
+if [ -z "$ENV_FILE" ]; then
+  echo "Error: Missing --env argument"
   show_help
   exit 1
 fi
 
-# Load the environment variables
-export $(grep -v '^#' $ENV_FILE | xargs)
+# Load environment variables
+export $(grep -v '^#' "$ENV_FILE" | xargs)
 
 # Set HOST from IP_HOST in .env file (default to 127.0.0.1)
 HOST=${IP_HOST:-"127.0.0.1"}
 
-# Set PORT from environment or custom override
+# Set PORT from environment or override
 if [ -n "$CUSTOM_PORT" ]; then
   PORT="$CUSTOM_PORT"
 else
@@ -82,16 +97,12 @@ if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
   . .venv/bin/activate
 else
   case "$OSTYPE" in
-    linux*)
-      echo "Linux based OS detected"
+    linux*|darwin*)
+      echo "Unix-based OS detected"
       source .venv/bin/activate
       ;;
-    darwin*)
-      echo "macOS detected"
-      source .venv/bin/activate
-      ;;
-    cygwin* | msys* | mingw*)
-      echo "Windows based OS detected"
+    cygwin*|msys*|mingw*)
+      echo "Windows-based OS detected"
       source .venv/Scripts/activate
       ;;
     *)
@@ -101,6 +112,6 @@ else
   esac
 fi
 
-# Start the server with the resolved host and port
+# Start the server
 echo "Running uvicorn server on $HOST:$PORT"
 uvicorn src.main:app --host "$HOST" --port "$PORT" $RELOAD_FLAG
