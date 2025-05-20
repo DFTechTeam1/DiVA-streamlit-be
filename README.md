@@ -59,7 +59,7 @@ This project was developed using WSL (Ubuntu 24.04.2 LTS on Windows 11) and Pyth
 
 6. **Start the API server**
     ```
-    sh scripts/run_server.sh --development
+    sh scripts/run_server.sh --env development --port 10000
     ```
 
 # On-development

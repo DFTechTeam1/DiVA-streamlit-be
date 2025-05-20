@@ -2,11 +2,13 @@
 
 # Show usage information
 show_help() {
-  echo "Usage: sh scripts/run_server.sh --env <environment> [ --port <number> ]"
+  echo "Usage: sh scripts/run_server.sh [ --env <environment> ] | [ --port <number> ] [ --help]"
   echo ""
-  echo "--env            Set environment: development | staging | production"
-  echo "--port           (Optional) Override default port (default: APPLICATION_PORT from .env)"
-  echo "--help, -h       Show this help message"
+  echo "--env       Set environment: development | staging | production"
+  echo "--port      Override default port (default: APPLICATION_PORT from .env)"
+  echo "--help, -h  Show this help message"
+  echo "Example: sh scripts/server.sh --env development --port 24000"
+  exit 0
 }
 
 # Default values
@@ -39,7 +41,6 @@ while [ $# -gt 0 ]; do
         *)
           echo "Error: Invalid environment '$ENV'"
           show_help
-          exit 1
           ;;
       esac
       ;;
@@ -50,17 +51,14 @@ while [ $# -gt 0 ]; do
       else
         echo "Error: Invalid port number '$1'. Must be numeric."
         show_help
-        exit 1
       fi
       ;;
     --help|-h)
       show_help
-      exit 0
       ;;
     *)
       echo "Error: Unknown argument: $1"
       show_help
-      exit 1
       ;;
   esac
   shift
@@ -70,7 +68,6 @@ done
 if [ -z "$ENV_FILE" ]; then
   echo "Error: Missing --env argument"
   show_help
-  exit 1
 fi
 
 # Load environment variables
