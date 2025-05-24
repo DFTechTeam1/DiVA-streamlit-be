@@ -1,63 +1,75 @@
 #!/bin/bash
 
 show_help() {
-    echo "Usage: sh scripts/run_executor.sh [ --path <filepath> ] | [ --development | --staging | --production ] | [ --help ]"
+    echo "Usage: sh scripts/run_executor.sh [ --path <filepath> ] | [ --env <environment> ] | [ --help ]"
     echo ""
-    echo "--development    Run the server on localhost using .env.development"
-    echo "--staging        Run the server on staging IP using .env.staging"
-    echo "--production     Run the server on production IP using .env.production"
-    echo "--path           Run the executor with full path"
-    echo "--help           Show this help message"
+    echo "--path        Run the executor with full path (required)"
+    echo "--env         Set environment: development | staging | production (default: development)"
+    echo "--help, -h    Show this help message"
     echo ""
-    echo "Example: sh scripts/run_executor.sh --path /home/dfactory/Project/DiVA-streamlit-be/services/custom_model/siglip.py --development"
+    echo "Example: sh scripts/run_executor.sh --path /path/to/script.py"
 }
 
+# Default values
 PROJECT_DIR="$HOME/Project/DiVA-streamlit-be"
-ENV_FILE=""
-
-case "$3" in
-  --development)
-    echo "Using development environment configuration"
-    ENV_FILE="$PROJECT_DIR/env/.env.development"
-    ;;
-  --staging)
-    echo "Using staging environment configuration"
-    ENV_FILE="$PROJECT_DIR/env/.env.staging"
-    ;;
-  --production)
-    echo "Using production environment configuration"
-    ENV_FILE="$PROJECT_DIR/env/.env.production"
-    ;;
-  --help)
-    show_help
-    exit 0
-    ;;
-  *)
-    echo "Error: Invalid or missing environment option: '$3'"
-    echo "Expected one of: --development | --staging | --production"
-    show_help
-    exit 1
-    ;;
-esac
-
+ENV_NAME="development"
+TARGET_SCRIPT=""
 
 # Parse arguments
-if [ "$1" = "--help" ]; then
-    show_help
-    exit 0
-elif [ "$1" = "--path" ] && [ -n "$2" ]; then
-    TARGET_SCRIPT="$2"
-else
-    echo "Error: Invalid arguments."
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --help|-h)
+            show_help
+            exit 0
+            ;;
+        --path)
+            TARGET_SCRIPT="$2"
+            shift 2
+            ;;
+        --env)
+            ENV_NAME="$2"
+            shift 2
+            ;;
+        *)
+            echo "Error: Unknown option: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+# Validate target script
+if [ -z "$TARGET_SCRIPT" ]; then
+    echo "Error: --path is required."
     show_help
     exit 1
 fi
 
-# Validate file exists
 if [ ! -f "$TARGET_SCRIPT" ]; then
     echo "Error: The specified file does not exist: $TARGET_SCRIPT"
     exit 1
 fi
+
+# Determine env file
+case "$ENV_NAME" in
+    development)
+        echo "Using development environment configuration"
+        ENV_FILE="$PROJECT_DIR/env/.env.development"
+        ;;
+    staging)
+        echo "Using staging environment configuration"
+        ENV_FILE="$PROJECT_DIR/env/.env.staging"
+        ;;
+    production)
+        echo "Using production environment configuration"
+        ENV_FILE="$PROJECT_DIR/env/.env.production"
+        ;;
+    *)
+        echo "Error: Invalid environment: '$ENV_NAME'"
+        echo "Expected one of: development | staging | production"
+        exit 1
+        ;;
+esac
 
 # Activate virtual environment based on OS
 echo "Checking OS Environment."
@@ -78,7 +90,7 @@ else
 fi
 echo "Virtual environment activated."
 
-# Load environment variables
+# Load env vars
 if [ -f "$ENV_FILE" ]; then
     echo "Loading environment variables from $ENV_FILE"
     export $(grep -v '^#' "$ENV_FILE" | xargs)
@@ -87,11 +99,11 @@ else
     exit 1
 fi
 
-# Run the target script
+# Run the script
 echo "Running script: $TARGET_SCRIPT"
 python3 "$TARGET_SCRIPT"
 
 if [ $? -ne 0 ]; then
-    echo "Error: Failed to run executor.py"
+    echo "Error: Script failed: $TARGET_SCRIPT"
     exit 1
 fi

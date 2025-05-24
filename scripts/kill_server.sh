@@ -1,7 +1,7 @@
 #!/bin/bash
 
 show_help() {
-    echo "Usage: sh scripts/kill_server.sh [ --port <server_port> ] | [ --help ]"
+    echo "Usage: sh scripts/kill_server.sh [ --port <port> ] | [ --help ]"
     echo ""
     echo "--port    Port of running server."
     echo "--help    Show this help message."

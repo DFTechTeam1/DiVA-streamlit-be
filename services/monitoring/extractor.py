@@ -1,12 +1,11 @@
 import os
 import re
 import sys
-import time
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 from utils.logger import logging
-from utils.helper import save_json, total_runtime
+from utils.json import JSON
 from typing import Optional
 
 
@@ -16,7 +15,6 @@ class DataMonitoring:
         self.base_depth: int = len(self.file_path.resolve().parts)
 
     def get_preview_paths(self, year_depth: int = 2, preview_depth: int = 5) -> Optional[list]:
-        start_time = time.time()
         year_pattern = re.compile(r'^\d{4}')
         preview_paths = []
 
@@ -33,11 +31,9 @@ class DataMonitoring:
                         logging.info(f'Found preview path: {full_path}')
                         preview_paths.append(full_path)
 
-        total_runtime('get_preview_paths', start_time)
         return preview_paths if preview_paths else None
 
     def get_client_preview(self, paths: Optional[list]) -> Optional[dict]:
-        start_time = time.time()
         if not paths:
             raise FileNotFoundError('No preview paths found.')
 
@@ -45,7 +41,16 @@ class DataMonitoring:
         all_matched_files = []
 
         for path in paths:
-            entries = os.listdir(path)
+            try:
+                entries = os.listdir(path)
+            except FileNotFoundError:
+                logging.warning(f'Path does not exist or is not accessible: {path}, skipping.')
+                continue
+
+            if not entries:
+                logging.warning(f'No files found in: {path}, skipping.')
+                continue
+
             matched_files = [
                 os.path.join(path, entry)
                 for entry in entries
@@ -58,7 +63,7 @@ class DataMonitoring:
                 continue
 
             all_matched_files.extend(matched_files)
-        total_runtime('get_client_preview', start_time)
+
         return {'paths': all_matched_files} if all_matched_files else None
 
 
@@ -69,4 +74,4 @@ DESTINATION_DIR = BASE_DIR / 'json' / 'client_preview.json'
 monitor = DataMonitoring(MOUNT_DIR)
 paths = monitor.get_preview_paths()
 client_previews = monitor.get_client_preview(paths)
-save_json(destination=DESTINATION_DIR, data=client_previews)
+JSON.save_json(destination=DESTINATION_DIR, data=client_previews)

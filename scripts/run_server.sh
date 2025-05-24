@@ -2,7 +2,7 @@
 
 # Show usage information
 show_help() {
-  echo "Usage: sh scripts/run_server.sh [ --env <environment> ] | [ --port <number> ] [ --help]"
+  echo "Usage: sh scripts/run_server.sh [ --env <environment> ] | [ --port <port> ] | [ --help ]"
   echo ""
   echo "--env       Set environment: development | staging | production"
   echo "--port      Override default port (default: APPLICATION_PORT from .env)"

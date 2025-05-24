@@ -1,32 +1,35 @@
+import sys
+from typing import Optional
 from datetime import datetime
+from pathlib import Path
+from sqlmodel import SQLModel, Field, Relationship
+
+sys.path.append(str(Path(__file__).resolve().parents[2]))
 from utils.helper import local_time
-from sqlmodel import SQLModel, Field
 from services.postgre.connection import database_connection
 
 
-class ClientPreview(SQLModel, table=True):
-    __tablename__ = 'client_preview'
-    id: int = Field(primary_key=True)
+class ImageMetadata(SQLModel, table=True):
+    __tablename__ = 'image_metadata'
+    id: Optional[int] = Field(primary_key=True)
     created_at: datetime = Field(default=local_time())
-    updated_at: datetime = Field(default=None, nullable=True)
-    filepath: str = Field(default=None)
-    filename: str = Field(default=None)
-    nature: bool = Field(default=False)
-    artifacts: bool = Field(default=False)
-    living_beings: bool = Field(default=False)
-    conceptual: bool = Field(default=False)
-    art_deco: bool = Field(default=False)
-    architectural: bool = Field(default=False)
-    artistic: bool = Field(default=False)
-    sci_fi: bool = Field(default=False)
-    fantasy: bool = Field(default=False)
-    afternoon: bool = Field(default=False)
-    sunset_sunrise: bool = Field(default=False)
-    night: bool = Field(default=False)
-    warm: bool = Field(default=False)
-    cool: bool = Field(default=False)
-    neutral: bool = Field(default=False)
-    gold: bool = Field(default=False)
+    filename: Optional[str] = Field(default=None)
+    checksum: Optional[str] = Field(default=None)
+
+    uploaded_img: list['UploadedImage'] = Relationship(back_populates='image_md5')
+
+
+class UploadedImage(SQLModel, table=True):
+    __tablename__ = 'uploaded_image'
+    id: Optional[int] = Field(primary_key=True)
+    created_at: datetime = Field(default=local_time())
+    upload_id: Optional[int] = Field(default=None, foreign_key='image_metadata.id')
+    checksum: Optional[str] = Field(default=None)
+    threshold: Optional[float] = Field(default=None)
+    total_page: Optional[int] = Field(default=None)
+    is_image_saved: bool = Field(default=False)
+
+    image_md5: Optional[ImageMetadata] = Relationship(back_populates='uploaded_img')
 
 
 async def database_migration():
