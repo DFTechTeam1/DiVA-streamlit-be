@@ -35,8 +35,8 @@ elif [ "$1" = "--port" ] && [ -n "$2" ]; then
     PORT="$2"
     PID=$(extract_pid "$PORT")
     if [ -z "$PID" ]; then
-        echo "No process found running on port $PORT."
-        exit 1
+        echo "No process found running on port $PORT. Skipping kill."
+        exit 0
     fi
     kill_pid "$PID"
 else
