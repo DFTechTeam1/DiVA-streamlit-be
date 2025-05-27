@@ -52,9 +52,9 @@ This project was developed using WSL (Ubuntu 24.04.2 LTS on Windows 11) and Pyth
     sh scripts/run_executor.sh --path services/monitoring/extractor.py
     ```
 
-5. **Run prediction and migrate preview data**
+5. **Create FAISS database**
     ```
-    sh scripts/run_executor.sh --path services/custom_model/siglip.py
+    sh scripts/run_executor.sh --path utils/zero_shot/classifier.py
     ```
 
 6. **Start the API server**
@@ -63,14 +63,14 @@ This project was developed using WSL (Ubuntu 24.04.2 LTS on Windows 11) and Pyth
     ```
 
 # On-development
-- [ ] Integrate a database for storing image classification metadata to enhance search accuracy.
-
-# Project Features
-- [ ] Filter spesific data source.
 - [ ] Add queueing method (e.g: Kafka, RabbitMQ, Redis) / rate limitter for preventing DDoS attack.
 
+# Project Features
+- [x] Integrated with vector database with zero-shot classification to store image embeddings, significantly improving query performance.
+
+
 ## Notes
-- Ensure that the NAS is mounted before running any extraction or prediction scripts.
+- Ensure that the NAS is mounted before creating FAISS database.
 - Verify that the NAS and internal database remain synchronized in terms of image data.
 
 # Repo Owner? #
