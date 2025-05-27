@@ -12,7 +12,8 @@ commands = [
         '/home/ai/Project/DiVA-streamlit-be/scripts/run_executor.sh',
         '--path',
         '/home/ai/Project/DiVA-streamlit-be/services/nas/executor.py',
-        '--staging',
+        '--env',
+        'staging'
     ],
     ['sh', '/home/ai/Project/DiVA-streamlit-be/scripts/run_mounter.sh'],
     [
@@ -20,17 +21,19 @@ commands = [
         '/home/ai/Project/DiVA-streamlit-be/scripts/run_executor.sh',
         '--path',
         '/home/ai/Project/DiVA-streamlit-be/services/monitoring/extractor.py',
-        '--staging',
+        '--env',
+        'staging'
     ],
     ['sh', '/home/ai/Project/DiVA-streamlit-be/scripts/kill_server.sh', '--port', '24000'],
     [
         'sh',
         '/home/ai/Project/DiVA-streamlit-be/scripts/run_executor.sh',
         '--path',
-        '/home/ai/Project/DiVA-streamlit-be/services/custom_model/siglip.py',
-        '--staging',
+        '/home/ai/Project/DiVA-streamlit-be/utils/zero_shot/classifier.py',
+        '--env',
+        'staging'
     ],
-    ['sh', '/home/ai/Project/DiVA-streamlit-be/scripts/run_server.sh', '--staging'],
+    ['sh', '/home/ai/Project/DiVA-streamlit-be/scripts/run_server.sh', '--env', 'staging'],
 ]
 
 
